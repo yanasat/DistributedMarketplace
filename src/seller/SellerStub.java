@@ -20,13 +20,24 @@ public class SellerStub {
 
             // Handle order requests
             if (msg.startsWith("ORDER:")) {
+                String product = msg.substring(6); // Extract product name
                 boolean hasProduct = rand.nextBoolean(); // 50% chance to have the product
                 String response = hasProduct ? "CONFIRMED" : "REJECTED";
+                
+                if (hasProduct) {
+                    System.out.println("[CONFIRM] Accepting order for: " + product);
+                } else {
+                    System.out.println("[REJECT] Declining order for: " + product);
+                }
+                
                 socket.send(response);
             } else if (msg.startsWith("CANCEL:")) {
-                // Handle order cancellation
-                System.out.println("Order cancelled!");
+                String product = msg.substring(7); // Extract product name
+                System.out.println("[CANCEL] Order cancelled for: " + product);
                 socket.send("CANCELLED");
+            } else if (msg.equals("HEALTH_CHECK")) {
+                // Respond to health check requests
+                socket.send("HEALTHY");
             }
         }
     }
