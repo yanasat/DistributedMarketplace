@@ -14,6 +14,9 @@ public class SellerProcess {
         
         System.out.println("Starting Seller Process at " + sellerEndpoint);
         
+        // Initialize process monitoring
+        ProcessMonitor.logProcessStart("Seller-" + sellerEndpoint, sellerEndpoint);
+        
         // Start the seller - this will run indefinitely
         SellerStub.start(sellerEndpoint);
     }

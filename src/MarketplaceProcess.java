@@ -25,19 +25,39 @@ public class MarketplaceProcess {
             sellerEndpoints = Arrays.asList(args[1].split(","));
         }
         
+        String processName = "Marketplace-" + marketplacePort;
         System.out.println("Starting Marketplace Process on port " + marketplacePort);
         System.out.println("Connecting to sellers: " + sellerEndpoints);
+        
+        // Initialize process monitoring
+        ProcessMonitor.logProcessStart(processName, "port:" + marketplacePort);
         
         // Create marketplace instance
         Marketplace marketplace = new Marketplace(sellerEndpoints);
         
-        // Simulate placing orders (this will be replaced by Yana's implementation)
+        // Simulate placing orders with performance monitoring
         for (int i = 0; i < 5; i++) {
+            String orderId = "ORDER-" + marketplacePort + "-" + (i + 1);
+            String product = "product" + (i % 3);
+            
             System.out.println("\n--- Placing order " + (i + 1) + " ---");
-            marketplace.placeOrder("product" + (i % 3)); // Cycle through 3 different products
+            
+            // Start monitoring this order
+            ProcessMonitor.logOrderStart(processName, orderId, product);
+            long startTime = System.currentTimeMillis();
+            
+            // Place the order
+            marketplace.placeOrder(product);
+            
+            // Calculate processing time and log result
+            long processingTime = System.currentTimeMillis() - startTime;
+            // Note: We don't know if it succeeded from here, so we'll log it as processed
+            ProcessMonitor.logOrderSuccess(processName, orderId, processingTime);
+            
             Thread.sleep(2000); // Wait 2 seconds between orders
         }
         
         System.out.println("Marketplace process completed.");
+        ProcessMonitor.printFinalStats();
     }
 }

@@ -15,6 +15,7 @@ public class SellerStub {
 
         // Main loop: handle incoming messages
         while (!Thread.currentThread().isInterrupted()) {
+            long requestStart = System.currentTimeMillis();
             String msg = socket.recvStr();
             System.out.println("Received: " + msg);
 
@@ -31,10 +32,20 @@ public class SellerStub {
                 }
                 
                 socket.send(response);
+                
+                // Log seller response with timing
+                long responseTime = System.currentTimeMillis() - requestStart;
+                System.out.println("[MONITOR] Response: " + response + " in " + responseTime + "ms");
+                
             } else if (msg.startsWith("CANCEL:")) {
                 String product = msg.substring(7); // Extract product name
                 System.out.println("[CANCEL] Order cancelled for: " + product);
                 socket.send("CANCELLED");
+                
+                // Log rollback activity
+                long responseTime = System.currentTimeMillis() - requestStart;
+                System.out.println("[MONITOR] Rollback processed in " + responseTime + "ms");
+                
             } else if (msg.equals("HEALTH_CHECK")) {
                 // Respond to health check requests
                 socket.send("HEALTHY");
