@@ -26,6 +26,13 @@
             <artifactId>jeromq</artifactId>
             <version>0.5.2</version>
         </dependency>
+        
+        <!-- SnakeYAML for YAML parsing -->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>2.2</version>
+        </dependency>
     </dependencies>
     
     <build>
@@ -48,6 +55,20 @@
                 <version>3.1.0</version>
                 <configuration>
                     <mainClass>IntegrationTest</mainClass>
+                </configuration>
+            </plugin>
+            
+            <!-- Maven Jar Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.2</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>Main</mainClass>
+                        </manifest>
+                    </archive>
                 </configuration>
             </plugin>
         </plugins>

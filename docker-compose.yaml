@@ -1,0 +1,20 @@
+services:
+  seller1:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: seller1
+    ports:
+      - "5555:5555"
+    environment:
+      - CONFIG_FILE=seller1.yaml
+
+  seller2:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: seller2
+    ports:
+      - "5556:5556"
+    environment:
+      - CONFIG_FILE=seller2.yaml
