@@ -5,11 +5,33 @@ echo "  Starting Distributed Marketplace (Maven)"
 echo "==============================================="
 
 echo "Step 1: Starting 5 seller processes..."
-gnome-terminal -- bash -c "mvn exec:java -Pseller -Dexec.args='tcp://localhost:5555'; exec bash" &
-gnome-terminal -- bash -c "mvn exec:java -Pseller -Dexec.args='tcp://localhost:5556'; exec bash" &
-gnome-terminal -- bash -c "mvn exec:java -Pseller -Dexec.args='tcp://localhost:5557'; exec bash" &
-gnome-terminal -- bash -c "mvn exec:java -Pseller -Dexec.args='tcp://localhost:5558'; exec bash" &
-gnome-terminal -- bash -c "mvn exec:java -Pseller -Dexec.args='tcp://localhost:5559'; exec bash" &
+open_terminal() {
+    local cmd="$1"
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        if command -v gnome-terminal &> /dev/null; then
+            gnome-terminal -- bash -c "$cmd; exec bash" &
+        elif command -v xfce4-terminal &> /dev/null; then
+            xfce4-terminal --hold -e "$cmd" &
+        elif command -v xterm &> /dev/null; then
+            xterm -hold -e "$cmd" &
+        else
+            echo "Kein unterstütztes Terminal gefunden!"
+        fi
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        osascript -e "tell application \"Terminal\" to do script \"$cmd\"" &
+    elif [[ "$OSTYPE" == "cygwin"* || "$OSTYPE" == "msys"* || "$OSTYPE" == "win32" ]]; then
+        start cmd /k "$cmd"
+    else
+        echo "Unbekanntes Betriebssystem: $OSTYPE"
+    fi
+}
+
+echo "Step 1: Starting 5 seller processes..."
+open_terminal "mvn exec:java -Pseller -Dexec.args='tcp://localhost:5555'"
+open_terminal "mvn exec:java -Pseller -Dexec.args='tcp://localhost:5556'"
+open_terminal "mvn exec:java -Pseller -Dexec.args='tcp://localhost:5557'"
+open_terminal "mvn exec:java -Pseller -Dexec.args='tcp://localhost:5558'"
+open_terminal "mvn exec:java -Pseller -Dexec.args='tcp://localhost:5559'"
 
 echo "All 5 sellers started!"
 
