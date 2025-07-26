@@ -1,0 +1,7 @@
+port: 5559
+products:
+  apple: 77
+  banana: 77
+crashProbability: 0.55
+lostAckProbability: 0.55
+avgLatencyMs: 55

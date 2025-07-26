@@ -22,7 +22,7 @@ public class MarketplaceProcess {
         if (args.length > 1) {
             sellerEndpoints = Arrays.asList(args[1].split(","));
         } else {
-            sellerEndpoints = Arrays.asList(
+            sellerEndpoints = List.of(
                 "tcp://localhost:5555", 
                 "tcp://localhost:5556",
                 "tcp://localhost:5557",

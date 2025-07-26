@@ -5,4 +5,4 @@ products:
   banana: 100
 crashProbability: 0.01
 lostAckProbability: 0.05
-avgLatencyMs: 100
+avgLatencyMs: 35

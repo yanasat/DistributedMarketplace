@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   seller1:
     build:
@@ -18,3 +20,33 @@ services:
       - "5556:5556"
     environment:
       - CONFIG_FILE=seller2.yaml
+
+  seller3:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: seller3
+    ports:
+      - "5557:5557"
+    environment:
+      - CONFIG_FILE=seller3.yaml
+
+  seller4:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: seller4
+    ports:
+      - "5558:5558"
+    environment:
+      - CONFIG_FILE=seller4.yaml
+
+  seller5:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: seller5
+    ports:
+      - "5559:5559"
+    environment:
+      - CONFIG_FILE=seller5.yaml

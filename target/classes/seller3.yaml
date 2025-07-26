@@ -1,8 +1,7 @@
-# seller2.yaml
-port: 5556
+port: 5557
 products:
   apple: 50
   banana: 100
 crashProbability: 0.01
 lostAckProbability: 0.05
-avgLatencyMs: 35
+avgLatencyMs: 100
