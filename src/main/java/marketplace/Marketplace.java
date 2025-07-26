@@ -3,12 +3,14 @@ package marketplace;
 import messaging.MessageUtils;
 import org.zeromq.ZMQ;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import model.Order;
 import model.Order.Status;
-import java.util.HashMap;
 
 // Marketplace class manages placing orders to multiple sellers and handles rollback if needed
 public class Marketplace {
+    private static final Logger LOGGER = Logger.getLogger(Marketplace.class.getName());
     private final List<String> sellerEndpoints;
 
     // Initialize with a list of seller endpoints
@@ -22,33 +24,39 @@ public class Marketplace {
 
         // Send order to each seller and collect their responses
         for (String endpoint : sellerEndpoints) {
-            ZMQ.Socket socket = MessageUtils.createSocket("REQ", false, endpoint);
-            socket.send("ORDER:" + product);
-            String response = socket.recvStr();
-            System.out.println("Response from " + endpoint + ": " + response);
+            try (ZMQ.Socket socket = MessageUtils.createSocket("REQ", false, endpoint)) {
+                socket.send("ORDER:" + product);
+                String response = socket.recvStr();
+                if (LOGGER.isLoggable(Level.INFO)) {
+                    LOGGER.info(String.format("Response from %s: %s", endpoint, response));
+                }
 
-            // Map response to order status (Java 11 compatible)
-            Status status;
-            switch (response) {
-                case "CONFIRMED":
-                    status = Status.CONFIRMED;
-                    break;
-                case "REJECTED":
-                    status = Status.REJECTED;
-                    break;
-                default:
-                    status = Status.PENDING;
-                    break;
+                // Map response to order status
+                Status status = Status.PENDING; // Default status
+                switch (response) {
+                    case "CONFIRMED":
+                        status = Status.CONFIRMED;
+                        break;
+                    case "REJECTED":
+                        status = Status.REJECTED;
+                        break;
+                    default:
+                        status = Status.PENDING;
+                        break;
+                }
+                order.setStatus(endpoint, status);
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, String.format("Error communicating with seller: %s", endpoint), e);
             }
-            order.setStatus(endpoint, status);
-            socket.close();
         }
 
         // If all sellers confirm, order is successful; otherwise, rollback
         if (order.isFullyConfirmed()) {
-            System.out.println("Order successful for product: " + product);
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info(String.format("Order successful for product: %s", product));
+            }
         } else {
-            System.out.println("Order failed. Starting rollback...");
+            LOGGER.warning("Order failed. Starting rollback...");
             rollback(order);
         }
     }
@@ -57,11 +65,15 @@ public class Marketplace {
     private void rollback(Order order) {
         for (String endpoint : order.getSellerStatus().keySet()) {
             if (order.getStatus(endpoint) == Status.CONFIRMED) {
-                ZMQ.Socket socket = MessageUtils.createSocket("REQ", false, endpoint);
-                socket.send("CANCEL:" + order.getProduct());
-                String response = socket.recvStr();
-                System.out.println("Rollback response from " + endpoint + ": " + response);
-                socket.close();
+                try (ZMQ.Socket socket = MessageUtils.createSocket("REQ", false, endpoint)) {
+                    socket.send("CANCEL:" + order.getProduct());
+                    String response = socket.recvStr();
+                    if (LOGGER.isLoggable(Level.INFO)) {
+                        LOGGER.info(String.format("Rollback response from %s: %s", endpoint, response));
+                    }
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, String.format("Error during rollback with seller: %s", endpoint), e);
+                }
             }
         }
     }
