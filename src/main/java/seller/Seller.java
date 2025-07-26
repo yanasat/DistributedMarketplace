@@ -1,14 +1,15 @@
 package seller;
 
-import org.zeromq.ZMQ;
-import org.zeromq.ZContext;
-
 import java.util.Random;
+
+import org.zeromq.ZContext;
+import org.zeromq.ZMQ;
 
 public class Seller {
     private final SellerConfig config;
     private final ProductInventory inventory;
     private final Random rand;
+    private volatile boolean running = true;
 
     public Seller(SellerConfig config) {
         this.config = config;
@@ -23,7 +24,7 @@ public class Seller {
             socket.bind(endpoint);
             System.out.println("Seller running on " + endpoint);
 
-            while (!Thread.currentThread().isInterrupted()) {
+            while (running && !Thread.currentThread().isInterrupted()) {
                 String request = socket.recvStr();
                 System.out.println("Received: " + request);
 
@@ -64,7 +65,12 @@ public class Seller {
 
                 socket.send(reply);
             }
+            socket.close();
         }
+    }
+
+    public void stop() {
+        running = false;
     }
 
     private void simulateLatency() {

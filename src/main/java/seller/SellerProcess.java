@@ -3,6 +3,7 @@ package seller;
 public class SellerProcess {
     public static void main(String[] args) {
         if (args.length < 1) {
+            System.out.println("Fehler: Es wurde keine Konfigurationsdatei angegeben. Bitte starten Sie das Programm wie folgt:");
             System.out.println("Usage: java -jar <jar-file> <config.yaml>");
             System.exit(1);
         }

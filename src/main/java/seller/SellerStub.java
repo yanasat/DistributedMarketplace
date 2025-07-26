@@ -1,11 +1,14 @@
 package seller;
 
-import messaging.MessageUtils;
-import org.zeromq.ZMQ;
 import java.util.Random;
+
+import org.zeromq.ZMQ;
+
+import messaging.MessageUtils;
 
 // SellerStub simulates a seller that can confirm or reject orders randomly
 public class SellerStub {
+    private static volatile boolean running = true;
 
     // Start the seller at the given endpoint
     public static void start(String endpoint) {
@@ -14,7 +17,7 @@ public class SellerStub {
         Random rand = new Random();
 
         // Main loop: handle incoming messages
-        while (!Thread.currentThread().isInterrupted()) {
+        while (running && !Thread.currentThread().isInterrupted()) {
             long requestStart = System.currentTimeMillis();
             String msg = socket.recvStr();
             System.out.println("Received: " + msg);
@@ -51,5 +54,10 @@ public class SellerStub {
                 socket.send("HEALTHY");
             }
         }
+        socket.close();
+    }
+
+    public static void stop() {
+        running = false;
     }
 }

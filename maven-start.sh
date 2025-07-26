@@ -26,7 +26,6 @@ open_terminal() {
     fi
 }
 
-echo "Step 1: Starting 5 seller processes..."
 open_terminal "mvn exec:java -Pseller -Dexec.args='tcp://localhost:5555'"
 open_terminal "mvn exec:java -Pseller -Dexec.args='tcp://localhost:5556'"
 open_terminal "mvn exec:java -Pseller -Dexec.args='tcp://localhost:5557'"

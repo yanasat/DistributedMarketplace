@@ -35,6 +35,9 @@ public class MarketplaceProcess {
         // Create marketplace instance
         Marketplace marketplace = new Marketplace(sellerEndpoints);
         
+        // Add shutdown hook to clean up
+        Runtime.getRuntime().addShutdownHook(new Thread(marketplace::stop));
+        
         // Simulate placing orders with performance monitoring
         for (int i = 0; i < 5; i++) {
             String orderId = "ORDER-" + marketplacePort + "-" + (i + 1);

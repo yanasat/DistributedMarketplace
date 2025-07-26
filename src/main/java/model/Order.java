@@ -5,6 +5,10 @@ import java.util.Map;
 
 // Order class represents an order for a product and tracks status per seller
 public class Order {
+
+    public String getId() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
     // Possible statuses for an order
     public enum Status { PENDING, CONFIRMED, REJECTED, CANCELLED }
 
