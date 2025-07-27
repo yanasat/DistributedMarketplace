@@ -27,3 +27,19 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Maven ###
+target/
+.mvn/
+mvnw
+mvnw.cmd
+
+### Java ###
+*.class
+
+### Logs ###
+*.log
+
+### Backup ###
+*.swp
+*~

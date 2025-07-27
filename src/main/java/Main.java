@@ -1,9 +1,9 @@
 // Main entry point for the distributed marketplace application
 // Starts seller threads and places orders via the marketplace
+import java.util.List;
+
 import marketplace.Marketplace;
 import seller.SellerStub;
-
-import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException {
@@ -23,7 +23,7 @@ public class Main {
 
         // Place 5 orders for the product "toni", waiting 2 seconds between each
         for (int i = 0; i < 5; i++) {
-            marketplace.placeOrder("toni");
+            marketplace.placeOrder("toni", 1);
             Thread.sleep(2000);
         }
     }

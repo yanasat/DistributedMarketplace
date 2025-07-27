@@ -58,7 +58,7 @@ public class MarketplaceProcess {
 
             try {
                 // Place the order
-                marketplace.placeOrder(product);
+                marketplace.placeOrder("Startwert", 1);
 
                 // Calculate processing time and log result
                 long processingTime = System.currentTimeMillis() - startTime;

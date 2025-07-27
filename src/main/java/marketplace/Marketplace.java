@@ -15,15 +15,14 @@ import model.Order.Status;
 
 public class Marketplace {
     private final List<String> sellerEndpoints;
-    private final ExecutorService executor = Executors.newFixedThreadPool(10);
+    private final ExecutorService executor = Executors.newFixedThreadPool(10);  // immer offen!
 
     public Marketplace(List<String> sellerEndpoints) {
         this.sellerEndpoints = sellerEndpoints;
     }
 
-public void placeOrder(String product) {
-    int quantity = 1; // TEMPORARY FIX: hardcoded quantity
-            Order order = new Order(product, quantity);
+    public void placeOrder(String product, int quantity) {
+        Order order = new Order(product, quantity);
 
         List<Future<Boolean>> futures = sellerEndpoints.stream()
                 .map(endpoint -> executor.submit(() -> reserve(endpoint, order)))
@@ -39,8 +38,9 @@ public void placeOrder(String product) {
                     order.setStatus(endpoint, Status.REJECTED);
                 }
             } catch (Exception e) {
-                System.out.println("Timeout/Error for seller " + sellerEndpoints.get(i));
-                order.setStatus(sellerEndpoints.get(i), Status.REJECTED);
+                String endpoint = sellerEndpoints.get(i);
+                System.out.println("Timeout/Error for seller " + endpoint);
+                order.setStatus(endpoint, Status.REJECTED);
             }
         }
 
@@ -51,8 +51,6 @@ public void placeOrder(String product) {
             System.out.println("One or more REJECTED. Rolling back...");
             rollback(order);
         }
-
-        executor.shutdown();
     }
 
     private boolean reserve(String endpoint, Order order) {
@@ -85,5 +83,10 @@ public void placeOrder(String product) {
                 }
             }
         });
+    }
+
+    // 👉 Neuer sauberer Abschluss:
+    public void stop() {
+        executor.shutdown();
     }
 }

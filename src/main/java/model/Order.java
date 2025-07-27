@@ -2,20 +2,19 @@ package model;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class Order {
+    private final String id;
+    private final String product;
+    private final int quantity;   // ✅ NEU: Menge
+    private final Map<String, Status> sellerStatus = new HashMap<>();
+
     public enum Status {
         CONFIRMED, REJECTED, PENDING
     }
 
-    private final String id;
-    private final String product;
-    private final int quantity;
-    private final Map<String, Status> sellerStatus = new HashMap<>();
-
     public Order(String product, int quantity) {
-        this.id = UUID.randomUUID().toString();
+        this.id = java.util.UUID.randomUUID().toString();
         this.product = product;
         this.quantity = quantity;
     }
@@ -33,7 +32,7 @@ public class Order {
     }
 
     public boolean isFullyConfirmed() {
-        return !sellerStatus.isEmpty() && sellerStatus.values().stream().allMatch(s -> s == Status.CONFIRMED);
+        return sellerStatus.values().stream().allMatch(s -> s == Status.CONFIRMED);
     }
 
     public Map<String, Status> getSellerStatus() {
