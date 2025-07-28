@@ -1,8 +1,9 @@
 // Simple integration test to verify multi-process setup works
 // This will be your first integration test
 
-import marketplace.Marketplace;
 import java.util.List;
+
+import marketplace.Marketplace;
 
 public class IntegrationTest {
     public static void main(String[] args) throws InterruptedException {
@@ -30,7 +31,7 @@ public class IntegrationTest {
         long startTime = System.currentTimeMillis();
         ProcessMonitor.logOrderStart("IntegrationTest", "TEST-001", "testProduct1");
         
-        marketplace.placeOrder("testProduct1");
+        marketplace.placeOrder("testProduct1", 1);
         
         long processingTime = System.currentTimeMillis() - startTime;
         ProcessMonitor.logOrderSuccess("IntegrationTest", "TEST-001", processingTime);
@@ -44,7 +45,7 @@ public class IntegrationTest {
             startTime = System.currentTimeMillis();
             ProcessMonitor.logOrderStart("IntegrationTest", testId, product);
             
-            marketplace.placeOrder(product);
+            marketplace.placeOrder(product, 1);
             
             processingTime = System.currentTimeMillis() - startTime;
             ProcessMonitor.logOrderSuccess("IntegrationTest", testId, processingTime);
@@ -60,7 +61,7 @@ public class IntegrationTest {
             startTime = System.currentTimeMillis();
             ProcessMonitor.logOrderStart("IntegrationTest", testId, "sameProduct");
             
-            marketplace.placeOrder("sameProduct");
+            marketplace.placeOrder("sameProduct", 1);
             
             processingTime = System.currentTimeMillis() - startTime;
             ProcessMonitor.logOrderSuccess("IntegrationTest", testId, processingTime);

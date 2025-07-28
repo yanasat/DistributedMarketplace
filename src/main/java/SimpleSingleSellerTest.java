@@ -20,7 +20,7 @@ public class SimpleSingleSellerTest {
         // Test: Place a few orders
         for (int i = 0; i < 3; i++) {
             System.out.println("\n--- Test Order " + (i + 1) + " ---");
-            marketplace.placeOrder("testProduct" + i);
+            marketplace.placeOrder("testProduct" + i, 1);
             Thread.sleep(1000);
         }
         

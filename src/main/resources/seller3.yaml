@@ -1,5 +1,4 @@
-# seller2.yaml
-port: 5556
+port: 5557
 products:
   apple: 50
   banana: 100

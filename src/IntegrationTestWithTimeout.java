@@ -1,8 +1,10 @@
 // Integration test with timeouts to prevent hanging
+import java.util.List;
+
+import org.zeromq.ZMQ;
+
 import marketplace.Marketplace;
 import messaging.MessageUtils;
-import org.zeromq.ZMQ;
-import java.util.List;
 
 public class IntegrationTestWithTimeout {
     public static void main(String[] args) throws InterruptedException {
@@ -34,7 +36,7 @@ public class IntegrationTestWithTimeout {
         // Test with timeout protection
         System.out.println("\n--- Test: Single Order with Timeout ---");
         try {
-            marketplace.placeOrder("testProduct");
+            marketplace.placeOrder("testProduct", 1);
             System.out.println("✅ Order completed successfully");
         } catch (Exception e) {
             System.out.println("❌ Order failed: " + e.getMessage());

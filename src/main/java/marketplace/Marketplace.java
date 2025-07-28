@@ -1,68 +1,92 @@
 package marketplace;
 
-import messaging.MessageUtils;
-import org.zeromq.ZMQ;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import org.zeromq.ZMQ;
+
+import messaging.MessageUtils;
 import model.Order;
 import model.Order.Status;
-import java.util.HashMap;
 
-// Marketplace class manages placing orders to multiple sellers and handles rollback if needed
 public class Marketplace {
     private final List<String> sellerEndpoints;
+    private final ExecutorService executor = Executors.newFixedThreadPool(10);  // immer offen!
 
-    // Initialize with a list of seller endpoints
     public Marketplace(List<String> sellerEndpoints) {
         this.sellerEndpoints = sellerEndpoints;
     }
 
-    // Place an order for a product to all sellers
-    public void placeOrder(String product) {
-        Order order = new Order(product);
+    public void placeOrder(String product, int quantity) {
+        Order order = new Order(product, quantity);
 
-        // Send order to each seller and collect their responses
-        for (String endpoint : sellerEndpoints) {
-            ZMQ.Socket socket = MessageUtils.createSocket("REQ", false, endpoint);
-            socket.send("ORDER:" + product);
-            String response = socket.recvStr();
-            System.out.println("Response from " + endpoint + ": " + response);
+        List<Future<Boolean>> futures = sellerEndpoints.stream()
+                .map(endpoint -> executor.submit(() -> reserve(endpoint, order)))
+                .collect(Collectors.toList());
 
-            // Map response to order status (Java 11 compatible)
-            Status status;
-            switch (response) {
-                case "CONFIRMED":
-                    status = Status.CONFIRMED;
-                    break;
-                case "REJECTED":
-                    status = Status.REJECTED;
-                    break;
-                default:
-                    status = Status.PENDING;
-                    break;
+        for (int i = 0; i < futures.size(); i++) {
+            try {
+                boolean confirmed = futures.get(i).get(2, TimeUnit.SECONDS);
+                String endpoint = sellerEndpoints.get(i);
+                if (confirmed) {
+                    order.setStatus(endpoint, Status.CONFIRMED);
+                } else {
+                    order.setStatus(endpoint, Status.REJECTED);
+                }
+            } catch (Exception e) {
+                String endpoint = sellerEndpoints.get(i);
+                System.out.println("Timeout/Error for seller " + endpoint);
+                order.setStatus(endpoint, Status.REJECTED);
             }
-            order.setStatus(endpoint, status);
-            socket.close();
         }
 
-        // If all sellers confirm, order is successful; otherwise, rollback
         if (order.isFullyConfirmed()) {
-            System.out.println("Order successful for product: " + product);
+            System.out.println("Order CONFIRMED by all. Sending COMMIT...");
+            sellerEndpoints.forEach(endpoint -> commit(endpoint, order));
         } else {
-            System.out.println("Order failed. Starting rollback...");
+            System.out.println("One or more REJECTED. Rolling back...");
             rollback(order);
         }
     }
 
-    // Rollback confirmed orders if not all sellers confirmed
-    private void rollback(Order order) {
-        for (String endpoint : order.getSellerStatus().keySet()) {
-            if (order.getStatus(endpoint) == Status.CONFIRMED) {
-                ZMQ.Socket socket = MessageUtils.createSocket("REQ", false, endpoint);
-                socket.send("CANCEL:" + order.getProduct());
-                String response = socket.recvStr();
-                System.out.println("Rollback response from " + endpoint + ": " + response);
-                socket.close();
-            }
+    private boolean reserve(String endpoint, Order order) {
+        try (ZMQ.Socket socket = MessageUtils.createSocket("REQ", false, endpoint)) {
+            String msg = String.format("RESERVE:%s:%s:%d", order.getId(), order.getProduct(), order.getQuantity());
+            socket.send(msg);
+            String reply = socket.recvStr();
+            System.out.println("RESERVE response from " + endpoint + ": " + reply);
+            return reply.startsWith("CONFIRMED");
         }
+    }
+
+    private void commit(String endpoint, Order order) {
+        try (ZMQ.Socket socket = MessageUtils.createSocket("REQ", false, endpoint)) {
+            String msg = String.format("COMMIT:%s:%s:%d", order.getId(), order.getProduct(), order.getQuantity());
+            socket.send(msg);
+            String reply = socket.recvStr();
+            System.out.println("COMMIT response from " + endpoint + ": " + reply);
+        }
+    }
+
+    private void rollback(Order order) {
+        order.getSellerStatus().forEach((endpoint, status) -> {
+            if (status == Status.CONFIRMED) {
+                try (ZMQ.Socket socket = MessageUtils.createSocket("REQ", false, endpoint)) {
+                    String msg = String.format("CANCEL:%s:%s:%d", order.getId(), order.getProduct(), order.getQuantity());
+                    socket.send(msg);
+                    String reply = socket.recvStr();
+                    System.out.println("ROLLBACK response from " + endpoint + ": " + reply);
+                }
+            }
+        });
+    }
+
+    // 👉 Neuer sauberer Abschluss:
+    public void stop() {
+        executor.shutdown();
     }
 }
