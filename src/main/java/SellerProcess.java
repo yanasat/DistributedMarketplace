@@ -5,7 +5,7 @@ import seller.SellerStub;
 public class SellerProcess {
     public static void main(String[] args) {
         // Default configuration - can be overridden by command line arguments
-        String sellerEndpoint = "tcp://localhost:5555"; // Default endpoint
+        String sellerEndpoint = "tcp://127.0.0.1:5555"; // Default endpoint
         
         // Parse command line arguments if provided
         if (args.length > 0) {

@@ -11,16 +11,16 @@ public class HealthChecker {
         
         // Define all expected endpoints
         List<String> sellerEndpoints = List.of(
-            "tcp://localhost:5555",
-            "tcp://localhost:5556", 
-            "tcp://localhost:5557",
-            "tcp://localhost:5558",
-            "tcp://localhost:5559"
+            "tcp://127.0.0.1:5555",
+            "tcp://127.0.0.1:5556", 
+            "tcp://127.0.0.1:5557",
+            "tcp://127.0.0.1:5558",
+            "tcp://127.0.0.1:5559"
         );
         
         List<String> marketplaceEndpoints = List.of(
-            "tcp://localhost:7777",
-            "tcp://localhost:7778"
+            "tcp://127.0.0.1:7777",
+            "tcp://127.0.0.1:7778"
         );
         
         // Check seller health

@@ -23,11 +23,11 @@ public class MarketplaceProcess {
             sellerEndpoints = Arrays.asList(args[1].split(","));
         } else {
             sellerEndpoints = List.of(
-                "tcp://localhost:5555", 
-                "tcp://localhost:5556",
-                "tcp://localhost:5557",
-                "tcp://localhost:5558",
-                "tcp://localhost:5559"
+                "tcp://127.0.0.1:5555", 
+                "tcp://127.0.0.1:5556",
+                "tcp://127.0.0.1:5557",
+                "tcp://127.0.0.1:5558",
+                "tcp://127.0.0.1:5559"
             );
         }
 
