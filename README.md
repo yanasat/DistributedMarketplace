@@ -1,92 +1,257 @@
-# Distributed Marketplace - Multi-Process Setup
+# Distributed Marketplace System
 
-## Quick Start Guide
+A sophisticated distributed marketplace implementation featuring **SAGA pattern** transactions, **Docker containerization**, and **fault-tolerant microservices**.
 
-This guide helps you run the distributed marketplace system with multiple processes.
+## Quick Start with Docker
 
 ### Prerequisites
-- Java installed on your system
-- ZeroMQ library (jeromq-0.5.2.jar) in the lib/ folder
+- Docker & Docker Compose installed
+- Java 17+ (for local development)
 
-### Running the System
+### Running with Docker (Recommended)
 
-#### Option 1: Start Everything at Once
+#### Start the Complete System
 ```bash
-# Run this to start all processes automatically
-start_all.bat
+docker-compose up --build
 ```
 
-#### Option 2: Start Components Manually
-
-1. **Start Sellers First:**
-   ```bash
-   start_sellers.bat
-   ```
-   This starts 5 sellers on ports 5555-5559.
-
-2. **Start Marketplaces:**
-   ```bash
-   start_marketplaces.bat
-   ```
-   This starts 2 marketplaces on ports 7777-7778.
-
-#### Option 3: Start Individual Processes
-
-**Start a single seller:**
+#### Start Individual Components
 ```bash
-java -cp "lib/*;src" SellerProcess tcp://localhost:5555
+# Start only sellers
+docker-compose up seller1 seller2 seller3 seller4 seller5
+
+# Start marketplaces (requires sellers to be running)
+docker-compose up marketplace1 marketplace2
 ```
 
-**Start a single marketplace:**
+#### View Logs
 ```bash
-java -cp "lib/*;src" MarketplaceProcess 7777
+# All services
+docker-compose logs -f
+
+# Specific service
+docker-compose logs -f marketplace1
 ```
 
-### Testing the System
-
-1. **Start all processes** using one of the methods above
-2. **Run the integration test:**
-   ```bash
-   java -cp "lib/*;src" IntegrationTest
-   ```
-
-### What You Should See
-
-- **Seller windows:** Each seller will show "Seller online at tcp://localhost:XXXX"
-- **Marketplace windows:** Each marketplace will place orders and show responses
-- **Integration test:** Will test various scenarios and show results
-
-### Troubleshooting
-
-- **"Address already in use"**: Make sure no other processes are using the same ports
-- **"Connection refused"**: Make sure sellers are started before marketplaces
-- **No response**: Check if all processes are still running
-
-### Process Architecture
-
-```
-Marketplace 1 (port 7777) ──┐
-                             ├─→ Seller 1 (port 5555)
-Marketplace 2 (port 7778) ──┤   Seller 2 (port 5556)
-                             │   Seller 3 (port 5557)
-Integration Test ────────────┤   Seller 4 (port 5558)
-                             └─→ Seller 5 (port 5559)
+#### Stop the System
+```bash
+docker-compose down
 ```
 
-### Next Steps for Development
+### Alternative: Maven Build & Run
 
-1. **Yana** will enhance MarketplaceProcess.java with SAGA coordination
-2. **Noah** will enhance SellerProcess.java with inventory management
-3. **Toni** will add Docker support, monitoring, and more tests
+#### Build JARs
+```bash
+./maven-build.sh
+# or on Windows:
+maven-build.bat
+```
+
+#### Start with Scripts
+```bash
+# Start all components
+./docker-start.sh
+
+# Or start individually
+./start-jars.sh
+```
+
+## Testing the System
+
+### Run Integration Tests
+```bash
+# With Docker
+docker run --network marketplace-network distributed-marketplace java -jar integration-test-jar-with-dependencies.jar
+
+# With Maven
+mvn exec:java -Dexec.mainClass="IntegrationTest"
+```
+
+### Health Check
+```bash
+# Check system health
+docker run --network marketplace-network distributed-marketplace java -jar health-check-jar-with-dependencies.jar
+
+# Or with Maven
+mvn exec:java -Phealth-check
+```
+
+## System Monitoring
+
+### View Container Status
+```bash
+docker ps
+```
+
+### Monitor Resource Usage
+```bash
+docker stats
+```
+
+### Access Container Logs
+```bash
+# Real-time logs
+docker-compose logs -f marketplace1
+
+# Last 100 lines
+docker-compose logs --tail=100 seller1
+```
+
+## What You Should See
+
+### Seller Services
+Each seller container will display:
+```
+✅ Seller listening on port 5555
+📦 Inventory: laptop=50, smartphone=30, tablet=20
+🔄 Processing SAGA transactions...
+```
+
+### Marketplace Services  
+Marketplace containers will show:
+```
+Starting SAGA transaction for order: abc123
+Seller tcp://seller1:5555 CONFIRMED reservation
+Order CONFIRMED by all sellers. Sending COMMIT...
+```
+
+### Integration Tests
+Test output will display:
+```
+=== Integration Test: Multi-Process Communication ===
+--- Test 1: Single Order ---
+✅ Order processed successfully
+--- Test 2: Concurrent Orders ---
+✅ All concurrent orders handled correctly
+```
+
+## Troubleshooting
+
+### Common Issues & Solutions
+
+#### Port Already in Use
+```bash
+# Stop all containers
+docker-compose down
+
+# Remove orphaned containers
+docker-compose down --remove-orphans
+```
+
+#### Container Connection Issues
+```bash
+# Check network connectivity
+docker network ls
+docker network inspect marketplace-network
+
+# Restart with fresh network
+docker-compose down
+docker-compose up --build
+```
+
+#### Memory/Performance Issues
+```bash
+# Check resource usage
+docker stats
+
+# Limit container resources (add to docker-compose.yml)
+# deploy:
+#   resources:
+#     limits:
+#       memory: 512M
+#       cpus: 0.5
+```
+
+#### Debug Container Issues
+```bash
+# Access container shell
+docker exec -it marketplace-seller1 /bin/bash
+
+# View detailed logs
+docker logs --details marketplace-seller1
+```
+
+## System Architecture
+
+### Containerized Microservices
+```
+┌─────────────────────────────────────────────────────────┐
+│                Docker Network                           │
+│  ┌─────────────┐    ┌─────────────┐                    │
+│  │Marketplace 1│◄──►│Marketplace 2│                    │
+│  │ (port 7777) │    │ (port 7778) │                    │
+│  └─────────────┘    └─────────────┘                    │
+│         │                   │                          │
+│         ▼                   ▼                          │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │              Seller Network                     │   │
+│  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐   │   │
+│  │  │Seller 1│ │Seller 2│ │Seller 3│ │Seller 4│   │   │
+│  │  │  :5555 │ │  :5556 │ │  :5557 │ │  :5558 │   │   │
+│  │  └────────┘ └────────┘ └────────┘ └────────┘   │   │
+│  │                        ┌────────┐              │   │
+│  │                        │Seller 5│              │   │
+│  │                        │  :5559 │              │   │
+│  │                        └────────┘              │   │
+│  └─────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────┘
+```
+
+### SAGA Transaction Flow
+```
+Marketplace → RESERVE → All Sellers
+     ↓
+ Collect Responses
+     ↓
+┌─────────────┬─────────────┐
+│All CONFIRM  │Some REJECT  │
+│     ↓       │     ↓       │
+│  COMMIT     │  ROLLBACK   │
+│  to All     │  to All     │
+└─────────────┴─────────────┘
+```
+
+## Features Implemented
+
+### Core Features
+- **SAGA Pattern**: 2-Phase Commit (RESERVE → COMMIT/ROLLBACK)
+- **Distributed Architecture**: 5 Sellers + 2 Marketplaces
+- **ZeroMQ Messaging**: Asynchronous inter-service communication
+- **Docker Containerization**: Full orchestration with docker-compose
+- **Fault Tolerance**: Network failures, timeouts, crash simulation
+- **Inventory Management**: Thread-safe product reservations
+- **Health Monitoring**: System status and performance tracking
+
+### Advanced Features
+- **Concurrent Processing**: Multi-threaded order handling
+- **Configuration Management**: YAML-based service configuration
+- **Integration Testing**: Comprehensive test suite
+- **Process Monitoring**: Real-time system observability
+- **Maven Build Pipeline**: Multi-JAR builds with profiles
 
 ---
 
-## Files Created by Integration Team (Toni)
+## Development Team Contributions
 
-- `MarketplaceProcess.java` - Main class for marketplace processes
-- `SellerProcess.java` - Main class for seller processes
-- `start_sellers.bat` - Script to start all sellers
-- `start_marketplaces.bat` - Script to start all marketplaces
-- `start_all.bat` - Script to start entire system
-- `IntegrationTest.java` - Basic integration test
-- `README.md` - This file
+### **Toni** - Integration & Testing
+- CI/CD pipeline with Maven profiles
+- System monitoring and health checks
+- Integration testing framework
+- Process coordination scripts
+- Build automation and deployment
+
+### **Yana** - Marketplace Logic & Docker Infrastructure
+- SAGA pattern implementation
+- Marketplace coordination logic
+- Transaction state management
+- Error handling and rollback mechanisms
+- Docker containerization and orchestration
+- Docker-compose configuration and networking
+
+### **Noah** - Seller Architecture & Inventory
+- Seller service implementation
+- Product inventory management system  
+- Thread-safe reservation mechanisms
+- Seller configuration and YAML integration
+- Network fault simulation
+- README documentation and improvements
