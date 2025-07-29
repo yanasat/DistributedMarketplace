@@ -1,6 +1,9 @@
 port: 5555
 products:
-  apple: 50
-crashProbability: 0.1
-lostAckProbability: 0.05
-avgLatencyMs: 500
+  laptop: 50
+  smartphone: 30
+  tablet: 20
+crashProbability: 0.01        # 1% crash rate
+lostAckProbability: 0.02      # 2% lost acknowledgment
+avgLatencyMs: 100             # 100ms average latency
+successProbability: 0.9       # 90% success rate

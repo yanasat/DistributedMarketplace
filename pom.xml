@@ -11,7 +11,7 @@
     <packaging>jar</packaging>
     
     <name>Distributed Marketplace System</name>
-    <description>Multi-process distributed marketplace with ZeroMQ messaging</description>
+    <description>Multi-process distributed marketplace with ZeroMQ messaging and SAGA pattern</description>
     
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -48,6 +48,99 @@
                 </configuration>
             </plugin>
             
+            <!-- Maven Shade Plugin for Fat JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.4</version>
+                <executions>
+                    <!-- Marketplace JAR -->
+                    <execution>
+                        <id>marketplace-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>marketplace</finalName>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>MarketplaceProcess</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <!-- Assembly Plugin for separate JARs -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <!-- Seller JAR -->
+                    <execution>
+                        <id>seller-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>seller</finalName>
+                            <archive>
+                                <manifest>
+                                    <mainClass>SellerProcess</mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                        </configuration>
+                    </execution>
+                    
+                    <!-- Integration Test JAR -->
+                    <execution>
+                        <id>integration-test-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>integration-test</finalName>
+                            <archive>
+                                <manifest>
+                                    <mainClass>IntegrationTest</mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                        </configuration>
+                    </execution>
+                    
+                    <!-- Health Check JAR -->
+                    <execution>
+                        <id>health-check-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>health-check</finalName>
+                            <archive>
+                                <manifest>
+                                    <mainClass>HealthChecker</mainClass>
+                                </manifest>
+                            </archive>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
             <!-- Exec Plugin for running individual components -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -55,20 +148,6 @@
                 <version>3.1.0</version>
                 <configuration>
                     <mainClass>IntegrationTest</mainClass>
-                </configuration>
-            </plugin>
-            
-            <!-- Maven Jar Plugin -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.2</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>Main</mainClass>
-                        </manifest>
-                    </archive>
                 </configuration>
             </plugin>
         </plugins>
@@ -165,7 +244,7 @@
                         <configuration>
                             <mainClass>MarketplaceProcess</mainClass>
                             <args>
-                                <arg>7777</arg>
+                                <arg>src/main/resources/marketplace.yaml</arg>
                             </args>
                         </configuration>
                     </plugin>

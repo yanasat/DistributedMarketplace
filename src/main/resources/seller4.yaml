@@ -1,7 +1,10 @@
+# seller4.yaml - Slow but reliable
 port: 5558
 products:
-  apple: 85
-  banana: 85
-crashProbability: 0.01
-lostAckProbability: 0.05
-avgLatencyMs: 100
+  laptop: 80
+  camera: 40
+  smartphone: 60
+crashProbability: 0.02        # 2% crash rate
+lostAckProbability: 0.01      # 1% lost acknowledgment
+avgLatencyMs: 500             # 500ms average latency
+successProbability: 0.95      # 95% success rate

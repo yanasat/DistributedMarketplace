@@ -13,6 +13,7 @@ public class SellerConfig {
     public double crashProbability;
     public double lostAckProbability;
     public int avgLatencyMs;
+    public double successProbability; // New field for success rate
 
     public static SellerConfig load(String filePath) {
         try (InputStream in = Files.newInputStream(Paths.get(filePath))) {
@@ -21,5 +22,11 @@ public class SellerConfig {
         } catch (Exception e) {
             throw new RuntimeException("Failed to load config: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public String toString() {
+        return String.format("SellerConfig{port=%d, crash=%.2f, lostAck=%.2f, latency=%dms, success=%.2f}", 
+                           port, crashProbability, lostAckProbability, avgLatencyMs, successProbability);
     }
 }

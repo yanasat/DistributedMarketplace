@@ -1,56 +1,49 @@
-import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import marketplace.Marketplace;
+import marketplace.MarketplaceConfig;
 
 public class MarketplaceProcess {
     private static final Logger LOGGER = Logger.getLogger(MarketplaceProcess.class.getName());
 
     public static void main(String[] args) throws InterruptedException {
-        // Default configuration - can be overridden by command line arguments
-        final String marketplacePort;
-        final List<String> sellerEndpoints;
+        // Load configuration
+        String configFile = args.length > 0 ? args[0] : "src/main/resources/marketplace.yaml";
+        MarketplaceConfig config = MarketplaceConfig.load(configFile);
+        
+        final String marketplacePort = String.valueOf(config.marketplace.port);
+        final String processName = config.marketplace.name;
 
-        if (args.length > 0) {
-            marketplacePort = args[0];
-        } else {
-            marketplacePort = "7777"; // Default port for this marketplace
-        }
-
-        if (args.length > 1) {
-            sellerEndpoints = Arrays.asList(args[1].split(","));
-        } else {
-            sellerEndpoints = List.of(
-                "tcp://127.0.0.1:5555", 
-                "tcp://127.0.0.1:5556",
-                "tcp://127.0.0.1:5557",
-                "tcp://127.0.0.1:5558",
-                "tcp://127.0.0.1:5559"
-            );
-        }
-
-        final String processName = "Marketplace-" + marketplacePort;
-        LOGGER.info(() -> String.format("Starting Marketplace Process on port %s", marketplacePort));
-        LOGGER.info(() -> String.format("Connecting to sellers: %s", sellerEndpoints));
+        LOGGER.info(() -> String.format("Starting %s on port %s", processName, marketplacePort));
+        LOGGER.info(() -> String.format("Configuration: %s", config.toString()));
+        LOGGER.info(() -> String.format("Connecting to sellers: %s", config.sellers));
 
         // Initialize process monitoring
         ProcessMonitor.logProcessStart(processName, "port:" + marketplacePort);
 
-        // Create marketplace instance
-        final Marketplace marketplace = new Marketplace(sellerEndpoints);
+        // Create marketplace instance with configured timeout
+        final Marketplace marketplace = new Marketplace(config.sellers, config.orders.timeout_ms);
 
         // Add shutdown hook to clean up
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> LOGGER.info("Shutting down Marketplace process...")));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            LOGGER.info("Shutting down Marketplace process...");
+            marketplace.stop();
+        }));
 
-        // Simulate placing orders with performance monitoring
-        for (int i = 0; i < 5; i++) {
+        // Generate random orders using configuration
+        Random rand = new Random();
+        
+        for (int i = 0; i < config.orders.max_orders; i++) {
             final int orderIndex = i;
             final String orderId = "ORDER-" + marketplacePort + "-" + (orderIndex + 1);
-            final String product = "product" + (orderIndex % 3);
+            final String product = config.products.get(rand.nextInt(config.products.size()));
+            final int quantity = rand.nextInt(3) + 1; // 1-3 items
 
             LOGGER.info(() -> String.format("%n--- Placing order %d ---", (orderIndex + 1)));
+            LOGGER.info(() -> String.format("Product: %s, Quantity: %d", product, quantity));
 
             // Start monitoring this order
             ProcessMonitor.logOrderStart(processName, orderId, product);
@@ -58,20 +51,27 @@ public class MarketplaceProcess {
 
             try {
                 // Place the order
-                marketplace.placeOrder("Startwert", 1);
+                marketplace.placeOrder(product, quantity);
 
                 // Calculate processing time and log result
                 long processingTime = System.currentTimeMillis() - startTime;
                 ProcessMonitor.logOrderSuccess(processName, orderId, processingTime);
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Error placing order", e);
-                ProcessMonitor.logOrderFailure(processName, orderId, 0L); // Added default processing time
+                long processingTime = System.currentTimeMillis() - startTime;
+                ProcessMonitor.logOrderFailure(processName, orderId, processingTime);
             }
 
-            Thread.sleep(2000); // Wait 2 seconds between orders
+            // Wait between orders using configured arrival rate
+            if (i < config.orders.max_orders - 1) {
+                Thread.sleep(config.orders.arrival_rate_ms);
+            }
         }
 
         LOGGER.info("Marketplace process completed.");
         ProcessMonitor.printFinalStats();
+        
+        // Graceful shutdown
+        marketplace.stop();
     }
 }

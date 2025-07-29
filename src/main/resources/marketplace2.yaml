@@ -1,0 +1,28 @@
+# marketplace2.yaml
+marketplace:
+  port: 7778
+  name: "Marketplace-Beta"
+  
+orders:
+  arrival_rate_ms: 2500
+  max_orders: 6
+  timeout_ms: 3500
+  
+sellers:
+  - "tcp://127.0.0.1:5555"
+  - "tcp://127.0.0.1:5556"
+  - "tcp://127.0.0.1:5557"
+  - "tcp://127.0.0.1:5558"
+  - "tcp://127.0.0.1:5559"
+
+products:
+  - "laptop"
+  - "smartphone"
+  - "gaming-chair"
+  - "monitor"
+  - "keyboard"
+
+simulation:
+  enable_logging: true
+  log_level: "DEBUG"
+  performance_monitoring: true

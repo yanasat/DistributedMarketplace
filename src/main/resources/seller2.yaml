@@ -1,8 +1,10 @@
 # seller2.yaml
 port: 5556
 products:
-  apple: 50
-  banana: 100
-crashProbability: 0.01
-lostAckProbability: 0.05
-avgLatencyMs: 35
+  laptop: 40
+  smartphone: 50
+  headphones: 100
+crashProbability: 0.05        # 5% crash rate
+lostAckProbability: 0.03      # 3% lost acknowledgment
+avgLatencyMs: 200             # 200ms average latency
+successProbability: 0.8       # 80% success rate
