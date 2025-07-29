@@ -1,0 +1,27 @@
+marketplace:
+  port: 7778
+  name: "Marketplace-Beta-Docker"
+  
+orders:
+  arrival_rate_ms: 2500
+  max_orders: 6
+  timeout_ms: 4500
+  
+sellers:
+  - "tcp://seller1:5555"
+  - "tcp://seller2:5556"
+  - "tcp://seller3:5557"
+  - "tcp://seller4:5558"
+  - "tcp://seller5:5559"
+
+products:
+  - "laptop"
+  - "gaming-chair"
+  - "monitor"
+  - "keyboard"
+  - "smartphone"
+
+simulation:
+  enable_logging: true
+  log_level: "DEBUG"
+  performance_monitoring: true

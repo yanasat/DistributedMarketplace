@@ -1,0 +1,109 @@
+services:
+  # Seller Services
+  seller1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketplace-seller1
+    ports:
+      - "5555:5555"
+    networks:
+      - marketplace-network
+    restart: unless-stopped
+    working_dir: /app
+    command: ["java", "-jar", "seller-jar-with-dependencies.jar", "tcp://0.0.0.0:5555", "config/seller1.yaml"]
+
+  seller2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketplace-seller2
+    ports:
+      - "5556:5556"
+    networks:
+      - marketplace-network
+    restart: unless-stopped
+    working_dir: /app
+    command: ["java", "-jar", "seller-jar-with-dependencies.jar", "tcp://0.0.0.0:5556", "config/seller2.yaml"]
+
+  seller3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketplace-seller3
+    ports:
+      - "5557:5557"
+    networks:
+      - marketplace-network
+    restart: unless-stopped
+    working_dir: /app
+    command: ["java", "-jar", "seller-jar-with-dependencies.jar", "tcp://0.0.0.0:5557", "config/seller3.yaml"]
+
+  seller4:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketplace-seller4
+    ports:
+      - "5558:5558"
+    networks:
+      - marketplace-network
+    restart: unless-stopped
+    working_dir: /app
+    command: ["java", "-jar", "seller-jar-with-dependencies.jar", "tcp://0.0.0.0:5558", "config/seller4.yaml"]
+
+  seller5:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketplace-seller5
+    ports:
+      - "5559:5559"
+    networks:
+      - marketplace-network
+    restart: unless-stopped
+    working_dir: /app
+    command: ["java", "-jar", "seller-jar-with-dependencies.jar", "tcp://0.0.0.0:5559", "config/seller5.yaml"]
+
+  # Marketplace Services
+  marketplace1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketplace-alpha
+    ports:
+      - "7777:7777"
+    depends_on:
+      - seller1
+      - seller2
+      - seller3
+      - seller4
+      - seller5
+    networks:
+      - marketplace-network
+    restart: unless-stopped
+    working_dir: /app
+    command: ["java", "-jar", "marketplace.jar", "config/marketplace1.yaml"]
+
+  marketplace2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: marketplace-beta
+    ports:
+      - "7778:7778"
+    depends_on:
+      - seller1
+      - seller2
+      - seller3
+      - seller4
+      - seller5
+    networks:
+      - marketplace-network
+    restart: unless-stopped
+    working_dir: /app
+    command: ["java", "-jar", "marketplace.jar", "config/marketplace2.yaml"]
+
+networks:
+  marketplace-network:
+    driver: bridge

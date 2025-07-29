@@ -1,0 +1,27 @@
+marketplace:
+  port: 7777
+  name: "Marketplace-Alpha-Docker"
+  
+orders:
+  arrival_rate_ms: 3000
+  max_orders: 8
+  timeout_ms: 5000
+  
+sellers:
+  - "tcp://seller1:5555"
+  - "tcp://seller2:5556"
+  - "tcp://seller3:5557"
+  - "tcp://seller4:5558"
+  - "tcp://seller5:5559"
+
+products:
+  - "laptop"
+  - "smartphone"
+  - "tablet"
+  - "headphones"
+  - "camera"
+
+simulation:
+  enable_logging: true
+  log_level: "INFO"
+  performance_monitoring: true
