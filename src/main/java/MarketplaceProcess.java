@@ -32,8 +32,8 @@ public class MarketplaceProcess {
         }
 
         final String processName = "Marketplace-" + marketplacePort;
-        LOGGER.info(() -> String.format("Starting Marketplace Process on port %s", marketplacePort));
-        LOGGER.info(() -> String.format("Connecting to sellers: %s", sellerEndpoints));
+        LOGGER.info(() -> String.format("\033[32mStarting Marketplace Process on port %s\033[0m", marketplacePort));
+        LOGGER.info(() -> String.format("\033[34mConnecting to sellers: %s\033[0m", sellerEndpoints));
 
         // Initialize process monitoring
         ProcessMonitor.logProcessStart(processName, "port:" + marketplacePort);
@@ -64,14 +64,14 @@ public class MarketplaceProcess {
                 long processingTime = System.currentTimeMillis() - startTime;
                 ProcessMonitor.logOrderSuccess(processName, orderId, processingTime);
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "Error placing order", e);
+                LOGGER.log(Level.SEVERE, "\033[31mError placing order\033[0m", e);
                 ProcessMonitor.logOrderFailure(processName, orderId, 0L); // Added default processing time
             }
 
             Thread.sleep(2000); // Wait 2 seconds between orders
         }
 
-        LOGGER.info("Marketplace process completed.");
+        LOGGER.info("\033[32mMarketplace process completed.\033[0m");
         ProcessMonitor.printFinalStats();
     }
 }

@@ -21,7 +21,7 @@ public class ProcessMonitor {
     public static void logOrderSuccess(String processName, String orderId, long responseTimeMs) {
         successfulOrders.incrementAndGet();
         addResponseTime(responseTimeMs);
-        System.out.println(String.format("[%s] [%s] ORDER_SUCCESS: %s (took %dms)", 
+        System.out.println(String.format("\033[32m[%s] [%s] ORDER_SUCCESS: %s (took %dms)\033[0m", 
             getCurrentTimestamp(), processName, orderId, responseTimeMs));
         printStats();
     }
@@ -29,7 +29,7 @@ public class ProcessMonitor {
     public static void logOrderFailure(String processName, String orderId, long responseTimeMs) {
         failedOrders.incrementAndGet();
         addResponseTime(responseTimeMs);
-        System.out.println(String.format("[%s] [%s] ORDER_FAILURE: %s (took %dms)", 
+        System.out.println(String.format("\033[31m[%s] [%s] ORDER_FAILURE: %s (took %dms)\033[0m", 
             getCurrentTimestamp(), processName, orderId, responseTimeMs));
         printStats();
     }
@@ -64,7 +64,7 @@ public class ProcessMonitor {
         
         double successRate = total > 0 ? (successful * 100.0 / total) : 0;
         
-        System.out.println(String.format("[%s] [STATS] Orders: %d total, %d successful (%.1f%%), %d failed | Avg response: %dms", 
+        System.out.println(String.format("\033[33m[%s] [STATS] Orders: %d total, %d successful (%.1f%%), %d failed | Avg response: %dms\033[0m", 
             getCurrentTimestamp(), total, successful, successRate, failed, avgResponseTime));
     }
     
