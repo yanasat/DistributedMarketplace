@@ -5,6 +5,6 @@ products:
   headphones: 50
   camera: 20
 crashProbability: 0.30        # 30% crash rate
-lostAckProbability: 0.20      # 20% lost acknowledgment
+lostAckProbability: 0s.20      # 20% lost acknowledgment
 avgLatencyMs: 300             # 300ms average latency
 successProbability: 0.5       # 50% success rate

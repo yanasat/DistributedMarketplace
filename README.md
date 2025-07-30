@@ -2,105 +2,159 @@
 
 A sophisticated distributed marketplace implementation featuring **SAGA pattern** transactions, **Docker containerization**, and **fault-tolerant microservices**.
 
-## Quick Start with Docker
+## 🚀 Execution Guide
 
-### Prerequisites
+### Option A: With Docker (Recommended)
+
+#### Prerequisites
 - Docker & Docker Compose installed
 - Java 17+ (for local development)
 
-### Running with Docker (Recommended)
+#### Step-by-Step Instructions
+1. **Clone repository and navigate to directory**
+   ```bash
+   git clone <repository-url>
+   cd DistributedMarketplace
+   ```
 
-#### Start the Complete System
-```bash
-docker-compose up --build
-```
+2. **Remove old cache and container remnants (to guarantee a clean start)**
+   ```bash
+   # Stop and remove all running containers
+   docker-compose down --volumes --remove-orphans
+   
+   # Clear Docker system cache
+   docker system prune -f
+   
+   # Remove all images for complete restart (optional)
+   docker image prune -a -f
+   ```
 
-#### Start Individual Components
-```bash
-# Start only sellers
-docker-compose up seller1 seller2 seller3 seller4 seller5
+3. **Build and start system**
+   ```bash
+   docker-compose up --build
+   ```
+   > The system automatically starts 5 Seller services and 2 Marketplace services
 
-# Start marketplaces (requires sellers to be running)
-docker-compose up marketplace1 marketplace2
-```
+4. **View logs (in new terminal)**
+   ```bash
+   # All services
+   docker-compose logs -f
+   
+   # Only specific service
+   docker-compose logs -f marketplace1
+   docker-compose logs -f seller1
+   ```
 
-#### View Logs
-```bash
-# All services
-docker-compose logs -f
+5. **Stop system**
+   ```bash
+   # In terminal with Ctrl+C or in new terminal:
+   docker-compose down
+   ```
 
-# Specific service
-docker-compose logs -f marketplace1
-```
+---
 
-#### Stop the System
-```bash
-docker-compose down
-```
+### Option B: With Maven (Local Development)
 
-### Alternative: Maven Build & Run
+#### Prerequisites
+- Java 17+ installed and in PATH
+- Maven installed and in PATH
 
-#### Build JARs
-```bash
-./maven-build.sh
-# or on Windows:
-maven-build.bat
-```
+#### Step-by-Step Instructions
+1. **Clone repository and navigate to directory**
+   ```bash
+   git clone <repository-url>
+   cd DistributedMarketplace
+   ```
 
-#### Start with Scripts
-```bash
-# Start all components
-./docker-start.sh
+2. **Remove old build cache (Clean Start)**
+   ```bash
+   # Clean Maven cache and target folder
+   mvn clean
+   
+   # Stop all running Java processes
+   pkill -f "java.*marketplace" || true
+   pkill -f "java.*seller" || true
+   
+   # Completely remove target directory
+   rm -rf target/
+   ```
 
-# Or start individually
-./start-jars.sh
-```
+3. **Build project**
+   ```bash
+   # Build all JARs
+   # On Linux and MacOS: 
+   ./maven-build.sh
+   # or on Windows:
+   ./maven-build.bat
+   
+   # Alternative: Manual with Maven
+   mvn clean package -DskipTests
+   ```
 
-## Testing the System
+4. **Start services individually (in separate terminals)**
+   
+   **Terminal 1-5: Start Sellers**
+   ```bash
+   # Seller 1
+   java -jar target/seller-jar-with-dependencies.jar tcp://localhost:5555 src/main/resources/seller1.yaml
+   
+   # Seller 2 (new terminal)
+   java -jar target/seller-jar-with-dependencies.jar tcp://localhost:5556 src/main/resources/seller2.yaml
+   
+   # Seller 3 (new terminal)
+   java -jar target/seller-jar-with-dependencies.jar tcp://localhost:5557 src/main/resources/seller3.yaml
+   
+   # Seller 4 (new terminal)
+   java -jar target/seller-jar-with-dependencies.jar tcp://localhost:5558 src/main/resources/seller4.yaml
+   
+   # Seller 5 (new terminal)
+   java -jar target/seller-jar-with-dependencies.jar tcp://localhost:5559 src/main/resources/seller5.yaml
+   ```
+   
+   **Terminal 6-7: Start Marketplaces** (after sellers)
+   ```bash
+   # Marketplace 1
+   java -jar target/marketplace.jar src/main/resources/marketplace1.yaml
+   
+   # Marketplace 2 (new terminal)
+   java -jar target/marketplace.jar src/main/resources/marketplace2.yaml
+   ```
+
+5. **Stop system**
+   ```bash
+   # End all terminals with Ctrl+C or:
+   pkill -f "java.*marketplace"
+   pkill -f "java.*seller"
+   ```
+
+---
+
+## 🧪 Testing the System
 
 ### Run Integration Tests
 ```bash
-# With Docker
-docker run --network marketplace-network distributed-marketplace java -jar integration-test-jar-with-dependencies.jar
+# With Docker (after system is running)
+docker exec -it marketplace-alpha java -jar target/integration-test-jar-with-dependencies.jar
 
-# With Maven
+# With Maven (after building)
 mvn exec:java -Dexec.mainClass="IntegrationTest"
 ```
 
 ### Health Check
 ```bash
-# Check system health
-docker run --network marketplace-network distributed-marketplace java -jar health-check-jar-with-dependencies.jar
+# With Docker (after system is running)
+docker exec -it marketplace-alpha java -jar target/health-check-jar-with-dependencies.jar
 
-# Or with Maven
+# With Maven
 mvn exec:java -Phealth-check
 ```
 
-## System Monitoring
+---
 
-### View Container Status
-```bash
-docker ps
-```
-
-### Monitor Resource Usage
-```bash
-docker stats
-```
-
-### Access Container Logs
-```bash
-# Real-time logs
-docker-compose logs -f marketplace1
-
-# Last 100 lines
-docker-compose logs --tail=100 seller1
-```
-
-## What You Should See
+## 📊 What You Should See
 
 ### Seller Services
-Each seller container will display:
+Each seller shows:
 ```
 ✅ Seller listening on port 5555
 📦 Inventory: laptop=50, smartphone=30, tablet=20
@@ -108,24 +162,16 @@ Each seller container will display:
 ```
 
 ### Marketplace Services  
-Marketplace containers will show:
+Marketplaces show:
 ```
-Starting SAGA transaction for order: abc123
-Seller tcp://seller1:5555 CONFIRMED reservation
-Order CONFIRMED by all sellers. Sending COMMIT...
-```
-
-### Integration Tests
-Test output will display:
-```
-=== Integration Test: Multi-Process Communication ===
---- Test 1: Single Order ---
-✅ Order processed successfully
---- Test 2: Concurrent Orders ---
-✅ All concurrent orders handled correctly
+🎯 Starting SAGA transaction for order: abc123
+✅ Seller tcp://seller1:5555 CONFIRMED reservation
+🎉 Order CONFIRMED by all sellers. Sending COMMIT...
 ```
 
-## Troubleshooting
+---
+
+## � Troubleshooting
 
 ### Common Issues & Solutions
 
@@ -175,8 +221,8 @@ docker logs --details marketplace-seller1
 
 ### Containerized Microservices
 ```
-┌─────────────────────────────────────────────────────────┐
-│                Docker Network                           │
+┌────────────────────────────────────────────────────────┐
+│                Docker Network                          │
 │  ┌─────────────┐    ┌─────────────┐                    │
 │  │Marketplace 1│◄──►│Marketplace 2│                    │
 │  │ (port 7777) │    │ (port 7778) │                    │
@@ -185,16 +231,16 @@ docker logs --details marketplace-seller1
 │         ▼                   ▼                          │
 │  ┌─────────────────────────────────────────────────┐   │
 │  │              Seller Network                     │   │
-│  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐   │   │
-│  │  │Seller 1│ │Seller 2│ │Seller 3│ │Seller 4│   │   │
-│  │  │  :5555 │ │  :5556 │ │  :5557 │ │  :5558 │   │   │
-│  │  └────────┘ └────────┘ └────────┘ └────────┘   │   │
-│  │                        ┌────────┐              │   │
-│  │                        │Seller 5│              │   │
-│  │                        │  :5559 │              │   │
-│  │                        └────────┘              │   │
+│  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐    │   │
+│  │  │Seller 1│ │Seller 2│ │Seller 3│ │Seller 4│    │   │
+│  │  │  :5555 │ │  :5556 │ │  :5557 │ │  :5558 │    │   │
+│  │  └────────┘ └────────┘ └────────┘ └────────┘    │   │
+│  │                        ┌────────┐               │   │
+│  │                        │Seller 5│               │   │
+│  │                        │  :5559 │               │   │
+│  │                        └────────┘               │   │
 │  └─────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────┘
 ```
 
 ### SAGA Transaction Flow
@@ -233,7 +279,7 @@ Marketplace → RESERVE → All Sellers
 
 ## Development Team Contributions
 
-### **Toni** - Integration & Testing
+### **Antonia** - Integration & Testing
 - CI/CD pipeline with Maven profiles
 - System monitoring and health checks
 - Integration testing framework
