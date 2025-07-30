@@ -91,7 +91,19 @@ A sophisticated distributed marketplace implementation featuring **SAGA pattern*
    mvn clean package -DskipTests
    ```
 
-4. **Start services individually (in separate terminals)**
+4. **Start system**
+   
+   **Option 4A: Automatic (Recommended) - Opens all terminals automatically**
+   ```bash
+   # On Linux and MacOS:
+   ./maven-start.sh
+   
+   # On Windows:
+   ./maven-start.bat
+   ```
+   > This automatically opens 7 separate terminals: 5 for sellers + 2 for marketplaces
+   
+   **Option 4B: Manual - Start services individually (in separate terminals)**
    
    **Terminal 1-5: Start Sellers**
    ```bash
@@ -122,7 +134,12 @@ A sophisticated distributed marketplace implementation featuring **SAGA pattern*
 
 5. **Stop system**
    ```bash
-   # End all terminals with Ctrl+C or:
+   # End all terminals with Ctrl+C in each terminal, or:
+   # Automatic stop (if using maven-start scripts):
+   ./maven-stop.sh       # Linux/MacOS
+   ./maven-stop.bat      # Windows
+   
+   # Manual stop:
    pkill -f "java.*marketplace"
    pkill -f "java.*seller"
    ```
