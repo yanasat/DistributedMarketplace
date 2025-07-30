@@ -1,20 +1,16 @@
-// Enhanced Seller Process with configuration support
 import seller.SellerStub;
 import seller.SellerConfig;
 
 public class SellerProcess {
     public static void main(String[] args) {
-        // Default configuration - can be overridden by command line arguments
-        String sellerEndpoint = "tcp://127.0.0.1:5555"; // Default endpoint
+        String sellerEndpoint = "tcp://127.0.0.1:5555";
         SellerConfig config = null;
         
-        // Parse command line arguments
         if (args.length > 0) {
             sellerEndpoint = args[0];
         }
         
         if (args.length > 1) {
-            // Load configuration from YAML file
             try {
                 config = SellerConfig.load(args[1]);
                 System.out.println("Loaded configuration from: " + args[1]);
@@ -24,7 +20,6 @@ public class SellerProcess {
             }
         }
         
-        // Make variables final for lambda usage
         final String finalSellerEndpoint = sellerEndpoint;
         final SellerConfig finalConfig = config;
         
@@ -33,16 +28,13 @@ public class SellerProcess {
             System.out.println("Configuration: " + finalConfig.toString());
         }
         
-        // Initialize process monitoring
         ProcessMonitor.logProcessStart("Seller-" + finalSellerEndpoint, finalSellerEndpoint);
         
-        // Add shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Shutting down Seller process at " + finalSellerEndpoint);
             SellerStub.stop();
         }));
         
-        // Start the seller - this will run indefinitely
         SellerStub.start(finalSellerEndpoint, finalConfig);
     }
 }

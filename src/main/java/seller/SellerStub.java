@@ -8,13 +8,13 @@ import org.zeromq.ZMQ;
 
 import messaging.MessageUtils;
 
-// SellerStub simulates a seller that can confirm or reject orders randomly
+
 public class SellerStub {
     private static volatile boolean running = true;
     private static final Map<String, Integer> reservations = new HashMap<>();
     private static SellerConfig config;
 
-    // Start the seller at the given endpoint with configuration
+
     public static void start(String endpoint, SellerConfig sellerConfig) {
         config = sellerConfig != null ? sellerConfig : createDefaultConfig();
         
@@ -22,34 +22,34 @@ public class SellerStub {
         System.out.println("Seller online at " + endpoint + " with config: " + config.toString());
         Random rand = new Random();
 
-        // Main loop: handle incoming messages
+
         while (running && !Thread.currentThread().isInterrupted()) {
             long requestStart = System.currentTimeMillis();
             String msg = socket.recvStr();
             System.out.println("Received: " + msg);
 
-            // Simulate network latency using normal distribution
+            
             simulateLatency(rand);
             
-            // Simulate crash (receive but don't process)
+            
             if (simulateCrash(rand)) {
                 System.out.println("[CRASH] Simulating crash: ignoring message");
-                continue; // Don't send response
+                continue; 
             }
 
             String response = "UNKNOWN";
             
             try {
-                // Handle new SAGA protocol
+                
                 if (msg.startsWith("RESERVE:")) {
-                    // Format: RESERVE:orderId:product:quantity
+
                     String[] parts = msg.split(":");
                     if (parts.length >= 4) {
                         String orderId = parts[1];
                         String product = parts[2];
                         int quantity = Integer.parseInt(parts[3]);
                         
-                        // Use configurable success probability
+                        
                         boolean canReserve = rand.nextDouble() < config.successProbability;
                         
                         if (canReserve) {
@@ -63,7 +63,7 @@ public class SellerStub {
                     }
                 }
                 else if (msg.startsWith("COMMIT:")) {
-                    // Format: COMMIT:orderId:product:quantity
+                    
                     String[] parts = msg.split(":");
                     if (parts.length >= 4) {
                         String orderId = parts[1];
@@ -76,7 +76,7 @@ public class SellerStub {
                     }
                 }
                 else if (msg.startsWith("CANCEL:") || msg.startsWith("ROLLBACK:")) {
-                    // Format: CANCEL:orderId:product:quantity
+                    
                     String[] parts = msg.split(":");
                     if (parts.length >= 4) {
                         String orderId = parts[1];
@@ -89,13 +89,13 @@ public class SellerStub {
                     }
                 }
                 else if (msg.equals("HEALTH_CHECK")) {
-                    // Respond to health check requests
+                    
                     response = "HEALTHY";
                     System.out.println("[HEALTH] Health check responded");
                 }
-                // Legacy protocol support
+                
                 else if (msg.startsWith("ORDER:")) {
-                    String product = msg.substring(6); // Extract product name
+                    String product = msg.substring(6); 
                     boolean hasProduct = rand.nextDouble() < config.successProbability;
                     response = hasProduct ? "CONFIRMED" : "REJECTED";
                     
@@ -111,26 +111,26 @@ public class SellerStub {
                 response = "ERROR";
             }
 
-            // Simulate lost acknowledgment (process but don't respond)
+            
             if (simulateLostAck(rand)) {
                 System.out.println("[LOST_ACK] Simulating lost acknowledgment: not replying");
-                continue; // Don't send response
+                continue; 
             }
                 
             socket.send(response);
             
-            // Log seller response with timing
+            
             long responseTime = System.currentTimeMillis() - requestStart;
             System.out.println("[MONITOR] Response: " + response + " in " + responseTime + "ms");
         }
         socket.close();
     }
 
-    // Simulate network latency using normal distribution
+    
     private static void simulateLatency(Random rand) {
         if (config.avgLatencyMs > 0) {
             try {
-                // Normal distribution with mean=avgLatencyMs, stddev=avgLatencyMs/3
+                
                 double latency = Math.max(0, rand.nextGaussian() * (config.avgLatencyMs / 3.0) + config.avgLatencyMs);
                 Thread.sleep((long) latency);
             } catch (InterruptedException e) {
@@ -139,17 +139,17 @@ public class SellerStub {
         }
     }
 
-    // Simulate seller crash (receive message but don't process)
+    
     private static boolean simulateCrash(Random rand) {
         return rand.nextDouble() < config.crashProbability;
     }
 
-    // Simulate lost acknowledgment (process but don't respond)
+    
     private static boolean simulateLostAck(Random rand) {
         return rand.nextDouble() < config.lostAckProbability;
     }
 
-    // Create default configuration for fallback
+    
     private static SellerConfig createDefaultConfig() {
         SellerConfig defaultConfig = new SellerConfig();
         defaultConfig.port = 5555;
@@ -161,7 +161,7 @@ public class SellerStub {
         return defaultConfig;
     }
 
-    // Overloaded method for backward compatibility
+    
     public static void start(String endpoint) {
         start(endpoint, null);
     }
