@@ -51,6 +51,54 @@ A sophisticated distributed marketplace implementation featuring **SAGA pattern*
    docker-compose down
    ```
 
+#### Windows-Specific Docker Instructions
+
+For Windows users, dedicated batch scripts are available for easier Docker management:
+
+**Available Windows Scripts:**
+- `docker-build.bat` - Build Docker images
+- `docker-start.bat` - Start all services
+- `docker-stop.bat` - Stop all services  
+- `docker-test.bat` - Run integration tests
+
+**Windows Quick Start:**
+```batch
+# Build Docker images
+docker-build.bat
+
+# Start services
+docker-start.bat
+
+# Check status
+docker-compose ps
+
+# Run tests (optional)
+docker-test.bat
+
+# Stop services
+docker-stop.bat
+```
+
+**Windows Service Overview:**
+After starting with `docker-start.bat`, the following services are available:
+- **Seller Services**: localhost:5555-5559 (5 sellers)
+- **Marketplace Services**: localhost:7777-7778 (2 marketplaces)
+
+**Windows Log Viewing:**
+```batch
+# All logs
+docker-compose logs -f
+
+# Specific service logs
+docker-compose logs -f seller1
+docker-compose logs -f marketplace1
+```
+
+**Windows Troubleshooting:**
+- Ensure Docker Desktop is running before executing scripts
+- Run Command Prompt as Administrator if permission issues occur
+- Check for port conflicts if services fail to start
+
 ---
 
 ### Option B: With Maven (Local Development)
@@ -71,12 +119,24 @@ A sophisticated distributed marketplace implementation featuring **SAGA pattern*
    # Clean Maven cache and target folder
    mvn clean
    
-   # Stop all running Java processes
+   # Stop all running Java processes (Linux/macOS)
    pkill -f "java.*marketplace" || true
    pkill -f "java.*seller" || true
    
-   # Completely remove target directory
+   # Completely remove target directory (Linux/macOS)
    rm -rf target/
+   ```
+   
+   **Windows equivalent:**
+   ```batch
+   # Clean Maven cache and target folder
+   mvn clean
+   
+   # Stop all Java processes (Windows)
+   taskkill /F /IM java.exe 2>nul || echo No Java processes found
+   
+   # Remove target directory (Windows)
+   if exist target rmdir /s /q target
    ```
 
 3. **Build project**
@@ -139,9 +199,15 @@ A sophisticated distributed marketplace implementation featuring **SAGA pattern*
    ./maven-stop.sh       # Linux/MacOS
    ./maven-stop.bat      # Windows
    
-   # Manual stop:
+   # Manual stop (Linux/macOS):
    pkill -f "java.*marketplace"
    pkill -f "java.*seller"
+   ```
+   
+   **Windows manual stop:**
+   ```batch
+   # Stop all Java processes (Windows)
+   taskkill /F /IM java.exe 2>nul || echo No Java processes found
    ```
 
 ---
