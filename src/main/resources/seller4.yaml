@@ -4,7 +4,7 @@ products:
   laptop: 80
   camera: 40
   smartphone: 60
-crashProbability: 0.02        # 2% crash rate
-lostAckProbability: 0.01      # 1% lost acknowledgment
-avgLatencyMs: 500             # 500ms average latency
-successProbability: 0.95      # 95% success rate
+crashProbability: 0.02       
+lostAckProbability: 0.01      
+avgLatencyMs: 500             
+successProbability: 0.95      

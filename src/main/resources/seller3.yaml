@@ -4,7 +4,7 @@ products:
   tablet: 60
   camera: 25
   headphones: 80
-crashProbability: 0.15        # 15% crash rate
-lostAckProbability: 0.10      # 10% lost acknowledgment
-avgLatencyMs: 50              # 50ms average latency
-successProbability: 0.7       # 70% success rate
+crashProbability: 0.15       
+lostAckProbability: 0.10      
+avgLatencyMs: 50              
+successProbability: 0.7       

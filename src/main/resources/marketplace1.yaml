@@ -1,4 +1,3 @@
-# marketplace1.yaml
 marketplace:
   port: 7777
   name: "Marketplace-Alpha"

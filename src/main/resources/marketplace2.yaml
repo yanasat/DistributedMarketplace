@@ -1,4 +1,3 @@
-# marketplace2.yaml
 marketplace:
   port: 7778
   name: "Marketplace-Beta"

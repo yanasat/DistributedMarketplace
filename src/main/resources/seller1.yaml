@@ -3,7 +3,7 @@ products:
   laptop: 50
   smartphone: 30
   tablet: 20
-crashProbability: 0.01        # 1% crash rate
-lostAckProbability: 0.02      # 2% lost acknowledgment
-avgLatencyMs: 100             # 100ms average latency
-successProbability: 0.9       # 90% success rate
+crashProbability: 0.01        
+lostAckProbability: 0.02      
+avgLatencyMs: 100             
+successProbability: 0.9       

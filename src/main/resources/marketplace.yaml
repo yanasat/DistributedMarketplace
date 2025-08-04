@@ -1,15 +1,12 @@
-# Marketplace Configuration
 marketplace:
   port: 7777
   name: "Marketplace-1"
   
-# Order generation settings
 orders:
-  arrival_rate_ms: 2000        # Delay between orders
-  max_orders: 10               # Maximum orders to generate
-  timeout_ms: 3000            # Timeout for seller responses
+  arrival_rate_ms: 2000       
+  max_orders: 10               
+  timeout_ms: 3000            
   
-# Seller endpoints
 sellers:
   - "tcp://127.0.0.1:5555"
   - "tcp://127.0.0.1:5556" 
@@ -17,7 +14,6 @@ sellers:
   - "tcp://127.0.0.1:5558"
   - "tcp://127.0.0.1:5559"
 
-# Products to order
 products:
   - "laptop"
   - "smartphone"
@@ -25,7 +21,6 @@ products:
   - "headphones"
   - "camera"
 
-# Simulation settings
 simulation:
   enable_logging: true
   log_level: "INFO"
