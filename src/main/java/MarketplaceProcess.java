@@ -21,8 +21,8 @@ public class MarketplaceProcess {
 
         ProcessMonitor.logProcessStart(processName, "port:" + marketplacePort);
 
-        final Marketplace marketplace = new Marketplace(config.sellers, config.orders.timeout_ms);
-
+        final Marketplace marketplace = new Marketplace(config.sellers, config.orders.timeout_ms, processName);
+        
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             LOGGER.info("Shutting down Marketplace process...");
             marketplace.stop();
