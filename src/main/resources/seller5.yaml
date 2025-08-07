@@ -1,9 +1,14 @@
 # seller5.yaml - Very unreliable (for testing)
 port: 5559
 products:
+  laptop: 0
+  smartphone: 0
   tablet: 30
-  headphones: 50
   camera: 20
+  headphones: 50
+  monitor: 0
+  gaming-chair: 0
+  keyboard: 0
 crashProbability: 0.30        
 lostAckProbability: 0.20     
 avgLatencyMs: 300             

@@ -38,86 +38,109 @@ public class Marketplace {
         this(sellerEndpoints, timeoutMs, "MP-DEFAULT");
     }
 
-    public void placeOrder(String product, int quantity) {
-        Order order = new Order(product, quantity, marketplaceId);
-        System.out.println("=== Starting SAGA transaction for order: " + order.getId() + " ===");
-        System.out.println("    Marketplace: " + marketplaceId);
-        System.out.println("    Product: " + product + ", Quantity: " + quantity);
+    // In src/main/java/marketplace/Marketplace.java
+// Ersetze die placeOrder() Method komplett:
 
-        long sagaStartTime = System.currentTimeMillis();
+public void placeOrder(String product, int quantity) {
+    Order order = new Order(product, quantity, marketplaceId);
+    System.out.println("=== Starting SAGA transaction for order: " + order.getId() + " ===");
+    System.out.println("    Marketplace: " + marketplaceId);
+    System.out.println("    Product: " + product + ", Quantity: " + quantity);
 
-        // Phase 1: RESERVE - Send reservation requests to all sellers
-        List<Future<ReserveResult>> futures = sellerEndpoints.stream()
-                .map(endpoint -> executor.submit(() -> reserve(endpoint, order)))
-                .collect(Collectors.toList());
+    long sagaStartTime = System.currentTimeMillis();
 
-        // Collect responses with timeout
-        for (int i = 0; i < futures.size(); i++) {
-            try {
-                ReserveResult result = futures.get(i).get(timeoutMs, TimeUnit.MILLISECONDS);
-                String endpoint = sellerEndpoints.get(i);
-                
-                if (result.success) {
-                    order.setStatus(endpoint, Status.CONFIRMED);
-                    System.out.println("✅ Seller " + endpoint + " CONFIRMED reservation");
-                } else {
-                    order.setStatus(endpoint, Status.REJECTED);
-                    System.out.println("❌ Seller " + endpoint + " REJECTED reservation: " + result.reason);
-                }
-            } catch (Exception e) {
-                String endpoint = sellerEndpoints.get(i);
-                System.out.println("⏰ Timeout/Error for seller " + endpoint + ": " + e.getMessage());
-                order.setStatus(endpoint, Status.REJECTED);
-            }
-        }
+    // Phase 1: RESERVE - Send reservation requests to all sellers
+    List<Future<ReserveResult>> futures = sellerEndpoints.stream()
+            .map(endpoint -> executor.submit(() -> reserve(endpoint, order)))
+            .collect(Collectors.toList());
 
-        // Phase 2: Decision - COMMIT or ROLLBACK
-        long decisionTime = System.currentTimeMillis();
-        
-        if (order.isFullyConfirmed()) {
-            System.out.println("🎉 Order CONFIRMED by all sellers. Sending COMMIT...");
-            commitOrder(order);
-        } else {
-            System.out.println("🔄 One or more sellers REJECTED. Rolling back...");
-            rollbackOrder(order);
-        }
-        
-        long totalTime = System.currentTimeMillis() - sagaStartTime;
-        System.out.println("=== SAGA transaction completed for order: " + order.getId() + 
-                         " (total time: " + totalTime + "ms) ===\n");
-    }
-
-    private ReserveResult reserve(String endpoint, Order order) {
-        try (ZMQ.Socket socket = MessageUtils.createSocket("REQ", false, endpoint)) {
-            socket.setReceiveTimeOut(timeoutMs);
-            socket.setSendTimeOut(1000);
+    // Collect responses with timeout
+    for (int i = 0; i < futures.size(); i++) {
+        try {
+            ReserveResult result = futures.get(i).get(timeoutMs, TimeUnit.MILLISECONDS);
+            String endpoint = sellerEndpoints.get(i);
             
-            String msg = String.format("RESERVE:%s:%s:%d", order.getId(), order.getProduct(), order.getQuantity());
-            
-            long startTime = System.currentTimeMillis();
-            socket.send(msg);
-            
-            String reply = socket.recvStr();
-            long responseTime = System.currentTimeMillis() - startTime;
-            
-            if (reply != null) {
-                System.out.println("RESERVE response from " + endpoint + ": " + reply + 
-                                 " (took " + responseTime + "ms)");
-                
-                if (reply.startsWith("CONFIRMED")) {
-                    return new ReserveResult(true, "Confirmed");
-                } else if (reply.startsWith("REJECTED")) {
-                    return new ReserveResult(false, "Rejected by seller");
-                } else {
-                    return new ReserveResult(false, "Unexpected response: " + reply);
-                }
+            if (result.success) {
+                order.setStatus(endpoint, Status.CONFIRMED);
+                System.out.println("✅ Seller " + endpoint + " CONFIRMED reservation");
             } else {
-                return new ReserveResult(false, "No response (timeout)");
+                order.setStatus(endpoint, Status.REJECTED);
+                System.out.println("❌ Seller " + endpoint + " REJECTED reservation: " + result.reason);
             }
         } catch (Exception e) {
-            return new ReserveResult(false, "Communication error: " + e.getMessage());
+            String endpoint = sellerEndpoints.get(i);
+            System.out.println("⏰ Timeout/Error for seller " + endpoint + ": " + e.getMessage());
+            order.setStatus(endpoint, Status.REJECTED);
         }
     }
+
+    // Phase 2: REALISTIC Decision - COMMIT wenn mindestens 1 Seller confirmed
+    long confirmedCount = order.getSellerStatus().values().stream()
+            .mapToLong(status -> status == Status.CONFIRMED ? 1 : 0)
+            .sum();
+
+    if (confirmedCount > 0) {
+        // CHANGED: Mindestens 1 Confirmation reicht für COMMIT
+        System.out.println("🎉 " + confirmedCount + " seller(s) CONFIRMED out of " + 
+                         sellerEndpoints.size() + ". Sending COMMIT...");
+        commitOrder(order);
+    } else {
+        // Nur wenn NIEMAND confirmed → Rollback
+        System.out.println("🔄 No sellers confirmed. Rolling back...");
+        rollbackOrder(order);
+    }
+    
+    long totalTime = System.currentTimeMillis() - sagaStartTime;
+    System.out.println("=== SAGA transaction completed for order: " + order.getId() + 
+                     " (total time: " + totalTime + "ms) ===\n");
+}
+    private ReserveResult reserve(String endpoint, Order order) {
+        try (ZMQ.Socket socket = MessageUtils.createSocket("REQ", false, endpoint)) {
+        socket.setReceiveTimeOut(timeoutMs);
+        socket.setSendTimeOut(1000);
+        
+        String msg = String.format("RESERVE:%s:%s:%d", order.getId(), order.getProduct(), order.getQuantity());
+        
+        long startTime = System.currentTimeMillis();
+        socket.send(msg);
+        
+        String reply = socket.recvStr();
+        long responseTime = System.currentTimeMillis() - startTime;
+        
+        if (reply != null) {
+            // DEBUG: Log raw response for debugging
+            System.out.println("RESERVE response from " + endpoint + ": " + reply + 
+                             " (took " + responseTime + "ms)");
+            
+            // ROBUST PARSING - handle corrupted messages
+            try {
+                // Clean reply string - remove non-printable characters
+                String cleanReply = reply.replaceAll("[^\\p{Print}]", "").trim();
+                
+                if (cleanReply.startsWith("CONFIRMED")) {
+                    return new ReserveResult(true, "Confirmed");
+                } else if (cleanReply.startsWith("REJECTED")) {
+                    return new ReserveResult(false, "Rejected by seller");
+                } else if (cleanReply.isEmpty() || cleanReply.length() < 3) {
+                    // Handle corrupted/empty messages
+                    System.out.println("⚠️ CORRUPTED MESSAGE from " + endpoint + 
+                                     ": Raw bytes: " + java.util.Arrays.toString(reply.getBytes()));
+                    return new ReserveResult(false, "Corrupted message received");
+                } else {
+                    return new ReserveResult(false, "Unexpected response: " + cleanReply);
+                }
+            } catch (Exception parseError) {
+                System.out.println("❌ PARSE ERROR for response from " + endpoint + 
+                                 ": " + parseError.getMessage());
+                return new ReserveResult(false, "Parse error: " + parseError.getMessage());
+            }
+        } else {
+            return new ReserveResult(false, "No response (timeout)");
+        }
+    } catch (Exception e) {
+        return new ReserveResult(false, "Communication error: " + e.getMessage());
+    }
+}
 
     private void commitOrder(Order order) {
         System.out.println("📝 Starting COMMIT phase for " + order.getId());

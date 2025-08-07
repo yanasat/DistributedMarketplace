@@ -19,12 +19,12 @@ public class SellerStub {
     private static SellerConfig config;
 
     public static void start(String endpoint, SellerConfig sellerConfig) {
-        config = sellerConfig != null ? sellerConfig : createDefaultConfig();
-        
-        // Initialisiere Inventar aus Config
-        initializeInventory();
-        
-        ZMQ.Socket socket = MessageUtils.createSocket("REP", true, endpoint);
+     config = sellerConfig != null ? sellerConfig : createDefaultConfig();
+    initializeInventory();
+    
+    ZMQ.Socket socket = null;
+    try {
+        socket = MessageUtils.createSocket("REP", true, endpoint);
         System.out.println("Seller online at " + endpoint);
         System.out.println("Initial inventory: " + inventory);
         System.out.println("Config: " + config.toString());
@@ -32,62 +32,131 @@ public class SellerStub {
         Random rand = new Random();
 
         while (running && !Thread.currentThread().isInterrupted()) {
-            long requestStart = System.currentTimeMillis();
-            String msg = socket.recvStr();
-            System.out.println("Received: " + msg);
-
-            simulateLatency(rand);
-            
-            if (simulateCrash(rand)) {
-                System.out.println("[CRASH] Simulating crash: ignoring message");
-                continue;
-            }
-
-            String response = "UNKNOWN";
-            
             try {
-                if (msg.startsWith("RESERVE:")) {
-                    response = handleReserve(msg);
-                }
-                else if (msg.startsWith("COMMIT:")) {
-                    response = handleCommit(msg);
-                }
-                else if (msg.startsWith("CANCEL:") || msg.startsWith("ROLLBACK:")) {
-                    response = handleRollback(msg);
-                }
-                else if (msg.equals("HEALTH_CHECK")) {
-                    response = "HEALTHY";
-                    System.out.println("[HEALTH] Health check responded");
-                }
-                else if (msg.startsWith("ORDER:")) {
-                    // Legacy support
-                    String product = msg.substring(6);
-                    boolean hasProduct = hasStock(product, 1);
-                    response = hasProduct ? "CONFIRMED" : "REJECTED";
+                long requestStart = System.currentTimeMillis();
+                
+                // ROBUST message receiving with multiple fallbacks
+                String msg = null;
+                try {
+                    byte[] msgBytes = socket.recv(0); // Non-blocking
+                    if (msgBytes != null && msgBytes.length > 0) {
+                        // Try UTF-8 first
+                        msg = new String(msgBytes, java.nio.charset.StandardCharsets.UTF_8).trim();
+                        
+                        // Fallback: ASCII if UTF-8 fails
+                        if (msg.isEmpty() || msg.contains("�")) {
+                            msg = new String(msgBytes, java.nio.charset.StandardCharsets.US_ASCII).trim();
+                        }
+                        
+                        // Last resort: filter printable chars only
+                        if (msg.contains("�") || msg.length() == 0) {
+                            msg = new String(msgBytes).replaceAll("[^\\p{Print}]", "").trim();
+                        }
+                    }
+                } catch (Exception recvError) {
+                    System.out.println("[RECV_ERROR] " + recvError.getMessage());
+                    continue;
                 }
                 
-            } catch (Exception e) {
-                System.out.println("[ERROR] Failed to process message: " + msg + " - " + e.getMessage());
-                response = "ERROR:" + e.getMessage();
-            }
+                if (msg == null || msg.isEmpty()) {
+                    System.out.println("[EMPTY_MSG] Received empty message, skipping");
+                    continue;
+                }
+                
+                System.out.println("Received: " + msg);
 
-            if (simulateLostAck(rand)) {
-                System.out.println("[LOST_ACK] Simulating lost acknowledgment: not replying");
-                continue;
-            }
+                // Simulate network issues
+                simulateLatency(rand);
                 
-            socket.send(response);
-            
-            long responseTime = System.currentTimeMillis() - requestStart;
-            System.out.println("[MONITOR] Response: " + response + " in " + responseTime + "ms");
-            
-            // Zeige aktuelles Inventar nach jeder Operation
-            if (!msg.equals("HEALTH_CHECK")) {
-                printInventoryStatus();
+                if (simulateCrash(rand)) {
+                    System.out.println("[CRASH] Simulating crash: ignoring message");
+                    continue;
+                }
+
+                String response = "UNKNOWN";
+                
+                try {
+                    // Parse message with robust error handling
+                    if (msg.startsWith("RESERVE:")) {
+                        response = handleReserve(msg);
+                    }
+                    else if (msg.startsWith("COMMIT:")) {
+                        response = handleCommit(msg);
+                    }
+                    else if (msg.startsWith("CANCEL:") || msg.startsWith("ROLLBACK:")) {
+                        response = handleRollback(msg);
+                    }
+                    else if (msg.equals("HEALTH_CHECK")) {
+                        response = "HEALTHY";
+                        System.out.println("[HEALTH] Health check responded");
+                    }
+                    else if (msg.startsWith("ORDER:")) {
+                        String product = msg.length() > 6 ? msg.substring(6) : "unknown";
+                        boolean hasProduct = hasStock(product, 1);
+                        response = hasProduct ? "CONFIRMED" : "REJECTED";
+                        System.out.println("[LEGACY] " + product + " → " + response);
+                    }
+                    else {
+                        System.out.println("[UNKNOWN] Unknown message format: " + msg);
+                        response = "ERROR:UNKNOWN_FORMAT";
+                    }
+                    
+                } catch (Exception processError) {
+                    System.out.println("[PROCESS_ERROR] Failed to process '" + msg + "': " + processError.getMessage());
+                    response = "ERROR:" + processError.getMessage();
+                }
+
+                // Simulate lost acknowledgments
+                if (simulateLostAck(rand)) {
+                    System.out.println("[LOST_ACK] Simulating lost acknowledgment: not replying");
+                    continue;
+                }
+                
+                // ROBUST response sending
+                try {
+                    // Ensure response is valid ASCII
+                    response = response.replaceAll("[^\\p{ASCII}]", "");
+                    
+                    byte[] responseBytes = response.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                    socket.send(responseBytes, 0);
+                    
+                    long responseTime = System.currentTimeMillis() - requestStart;
+                    System.out.println("[MONITOR] Response: " + response + " in " + responseTime + "ms");
+                    
+                } catch (Exception sendError) {
+                    System.out.println("[SEND_ERROR] Failed to send response: " + sendError.getMessage());
+                    continue;
+                }
+                
+                // Show inventory (except for health checks)
+                if (!msg.equals("HEALTH_CHECK")) {
+                    printInventoryStatus();
+                }
+                
+            } catch (Exception outerError) {
+                System.out.println(" [FATAL] Outer loop error: " + outerError.getMessage());
+                outerError.printStackTrace();
+                
+                // Try to recover
+                try { Thread.sleep(100); } catch (InterruptedException ie) { break; }
             }
         }
-        socket.close();
+        
+    } catch (Exception startupError) {
+        System.out.println(" [STARTUP_ERROR] " + startupError.getMessage());
+        startupError.printStackTrace();
+        
+    } finally {
+        if (socket != null) {
+            try {
+                socket.close();
+                System.out.println("🔌 Socket closed for " + endpoint);
+            } catch (Exception closeError) {
+                System.out.println("⚠️ Error closing socket: " + closeError.getMessage());
+            }
+        }
     }
+}
 
     private static synchronized String handleReserve(String msg) {
         String[] parts = msg.split(":");

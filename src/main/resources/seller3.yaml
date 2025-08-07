@@ -1,10 +1,15 @@
 # seller3.yaml - Fast but unreliable
 port: 5557
 products:
+  laptop: 0
+  smartphone: 0
   tablet: 60
   camera: 25
   headphones: 80
-crashProbability: 0.15       
-lostAckProbability: 0.10      
+  monitor: 0
+  gaming-chair: 0
+  keyboard: 0
+crashProbability: 0.05       
+lostAckProbability: 0.05      
 avgLatencyMs: 50              
 successProbability: 0.7       
