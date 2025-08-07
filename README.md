@@ -30,9 +30,14 @@ A sophisticated distributed marketplace implementation featuring **SAGA pattern*
    ```
 
 3. **Build and start system**
+   Option 3A: Using convenience scripts (Recommended)
+   ./docker-build.sh    # Build Docker images
+   ./docker-start.sh    # Start all services
+
+   Option 3B: Manual Docker Compose
    ```bash
-   docker-compose up --build
-   ```
+      docker-compose up --build
+      ```
    > The system automatically starts 5 Seller services and 2 Marketplace services
 
 4. **View logs (in new terminal)**
@@ -41,11 +46,12 @@ A sophisticated distributed marketplace implementation featuring **SAGA pattern*
    docker-compose logs -f
    
    # Only specific service
-   docker-compose logs -f marketplace1
    docker-compose logs -f seller1
    ```
+5. **Run integration tests(optional)**
+   ./docker-test.sh
 
-5. **Stop system**
+6. **Stop system**
    ```bash
    # In terminal with Ctrl+C or in new terminal:
    docker-compose down
@@ -209,49 +215,6 @@ docker-compose logs -f marketplace1
    # Stop all Java processes (Windows)
    taskkill /F /IM java.exe 2>nul || echo No Java processes found
    ```
-
----
-
-## 🧪 Testing the System
-
-### Run Integration Tests
-```bash
-# With Docker (after system is running)
-docker exec -it marketplace-alpha java -jar target/integration-test-jar-with-dependencies.jar
-
-# With Maven (after building)
-mvn exec:java -Dexec.mainClass="IntegrationTest"
-```
-
-### Health Check
-```bash
-# With Docker (after system is running)
-docker exec -it marketplace-alpha java -jar target/health-check-jar-with-dependencies.jar
-
-# With Maven
-mvn exec:java -Phealth-check
-```
-
----
-
-## 📊 What You Should See
-
-### Seller Services
-Each seller shows:
-```
-✅ Seller listening on port 5555
-📦 Inventory: laptop=50, smartphone=30, tablet=20
-🔄 Processing SAGA transactions...
-```
-
-### Marketplace Services  
-Marketplaces show:
-```
-🎯 Starting SAGA transaction for order: abc123
-✅ Seller tcp://seller1:5555 CONFIRMED reservation
-🎉 Order CONFIRMED by all sellers. Sending COMMIT...
-```
-
 ---
 
 ## � Troubleshooting
@@ -363,11 +326,12 @@ Marketplace → RESERVE → All Sellers
 ## Development Team Contributions
 
 ### **Antonia** - Integration & Testing
-- CI/CD pipeline with Maven profiles
+- Maven build profiles and automation scripts
 - System monitoring and health checks
 - Integration testing framework
 - Process coordination scripts
 - Build automation and deployment
+- .bat files for windows
 
 ### **Yana** - Marketplace Logic & Docker Infrastructure
 - SAGA pattern implementation
