@@ -11,13 +11,7 @@ A sophisticated distributed marketplace implementation featuring **SAGA pattern*
 - Java 17+ (for local development)
 
 #### Step-by-Step Instructions
-1. **Clone repository and navigate to directory**
-   ```bash
-   git clone <repository-url>
-   cd DistributedMarketplace
-   ```
-
-2. **Remove old cache and container remnants (to guarantee a clean start)**
+1. **Remove old cache and container remnants (to guarantee a clean start)**
    ```bash
    # Stop and remove all running containers
    docker-compose down --volumes --remove-orphans
@@ -29,7 +23,7 @@ A sophisticated distributed marketplace implementation featuring **SAGA pattern*
    docker image prune -a -f
    ```
 
-3. **Build and start system**
+2. **Build and start system**
    Option 3A: Using convenience scripts (Recommended)
    ./docker-build.sh    # Build Docker images
    ./docker-start.sh    # Start all services
@@ -40,7 +34,7 @@ A sophisticated distributed marketplace implementation featuring **SAGA pattern*
       ```
    > The system automatically starts 5 Seller services and 2 Marketplace services
 
-4. **View logs (in new terminal)**
+3. **View logs (in new terminal)**
    ```bash
    # All services
    docker-compose logs -f
@@ -48,10 +42,10 @@ A sophisticated distributed marketplace implementation featuring **SAGA pattern*
    # Only specific service
    docker-compose logs -f seller1
    ```
-5. **Run integration tests(optional)**
+4. **Run integration tests(optional)**
    ./docker-test.sh
 
-6. **Stop system**
+5. **Stop system**
    ```bash
    # In terminal with Ctrl+C or in new terminal:
    docker-compose down
@@ -114,13 +108,7 @@ docker-compose logs -f marketplace1
 - Maven installed and in PATH
 
 #### Step-by-Step Instructions
-1. **Clone repository and navigate to directory**
-   ```bash
-   git clone <repository-url>
-   cd DistributedMarketplace
-   ```
-
-2. **Remove old build cache (Clean Start)**
+1. **Remove old build cache (Clean Start)**
    ```bash
    # Clean Maven cache and target folder
    mvn clean
@@ -145,7 +133,7 @@ docker-compose logs -f marketplace1
    if exist target rmdir /s /q target
    ```
 
-3. **Build project**
+2. **Build project**
    ```bash
    # Build all JARs
    # On Linux and MacOS: 
@@ -157,7 +145,7 @@ docker-compose logs -f marketplace1
    mvn clean package -DskipTests
    ```
 
-4. **Start system**
+3. **Start system**
    
    **Option 4A: Automatic (Recommended) - Opens all terminals automatically**
    ```bash
@@ -198,7 +186,7 @@ docker-compose logs -f marketplace1
    java -jar target/marketplace.jar src/main/resources/marketplace2.yaml
    ```
 
-5. **Stop system**
+4. **Stop system**
    ```bash
    # End all terminals with Ctrl+C in each terminal, or:
    # Automatic stop (if using maven-start scripts):

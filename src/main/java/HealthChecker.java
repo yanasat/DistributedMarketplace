@@ -1,7 +1,9 @@
-import messaging.MessageUtils;
-import org.zeromq.ZMQ;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+
+import org.zeromq.ZMQ;
+
+import messaging.MessageUtils;
 
 public class HealthChecker {
     
@@ -9,16 +11,16 @@ public class HealthChecker {
         System.out.println("=== Distributed Marketplace Health Check ===");
         
         List<String> sellerEndpoints = List.of(
-            "tcp://127.0.0.1:5555",
-            "tcp://127.0.0.1:5556", 
-            "tcp://127.0.0.1:5557",
-            "tcp://127.0.0.1:5558",
-            "tcp://127.0.0.1:5559"
+            "tcp://seller1:5555",
+            "tcp://seller2:5556",
+            "tcp://seller3:5557",
+            "tcp://seller4:5558",
+            "tcp://seller5:5559"
         );
         
         List<String> marketplaceEndpoints = List.of(
-            "tcp://127.0.0.1:7777",
-            "tcp://127.0.0.1:7778"
+            "tcp://marketplace1:7777",
+            "tcp://marketplace2:7778"
         );
         
         System.out.println("\nChecking Seller Processes...");
