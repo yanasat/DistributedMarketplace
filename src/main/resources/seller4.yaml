@@ -2,8 +2,13 @@
 port: 5558
 products:
   laptop: 80
-  camera: 40
   smartphone: 60
+  tablet: 0
+  camera: 40
+  headphones: 0
+  monitor: 0
+  gaming-chair: 0
+  keyboard: 0
 crashProbability: 0.02       
 lostAckProbability: 0.01      
 avgLatencyMs: 500             

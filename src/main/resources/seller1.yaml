@@ -3,6 +3,11 @@ products:
   laptop: 50
   smartphone: 30
   tablet: 20
+  camera: 0
+  headphones: 0
+  monitor: 0
+  gaming-chair: 0
+  keyboard: 0
 crashProbability: 0.01        
 lostAckProbability: 0.02      
 avgLatencyMs: 100             
